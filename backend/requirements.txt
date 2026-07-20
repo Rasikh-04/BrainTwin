@@ -1,0 +1,9 @@
+# Offline preprocessing dependencies (Python 3.11+; tested on 3.14).
+# pyedflib has no wheel for 3.14, so backend/edf_reader.py is a hand-rolled minimal reader.
+numpy
+scipy
+nibabel
+nilearn
+pillow
+pygltflib          # OBJ -> glb with one named node per region
+fast-simplification # mesh decimation to keep the atlas light in the browser
