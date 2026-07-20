@@ -5,6 +5,89 @@ landed, what is deferred and who owns it, and the risks to keep in view. It is
 not a spec (the specs are `docs/DATA_CONTRACT.md` and `docs/MEDICAL_ACCURACY.md`);
 it is the shared state of the build.
 
+## 2026-07-21 Frontend session 1: Next.js scaffold and step 1 atlas explorer
+
+Branch: `fe/atlas-explorer`. Owner: Abdul Mannan. Step 1 of the two-step UX is
+working end to end against the real wired dataset. Verified in a real browser,
+not just compiled.
+
+### What landed
+
+- Next.js 16 app in `/frontend` (App Router, TypeScript, Tailwind v4, Turbopack)
+  with React Three Fiber 9, drei 10, three 0.185, and zustand.
+- `src/lib/contract/` is the typed frontend half of the contract: `types.ts`
+  mirrors every shape in `docs/DATA_CONTRACT.md`, `load.ts` fetches and validates
+  the JSON at the boundary, `review.ts` is the single choke point for the
+  medical-honesty rules.
+- Step 1 atlas explorer: both atlas glbs load, all 100 mesh nodes join to
+  `regions.json`, regions are clickable by raycast, and the detail panel shows
+  the region record.
+- Searchable region index for all 100 regions, because subcortical structures
+  cannot be reached by clicking the cortex.
+- Ghost cortex control that fades the cortical surface so subcortical structures
+  can be seen and picked through it.
+- Persistent "pending expert review" banner with a live unreviewed count, and a
+  `SourcedField` component that is the only sanctioned way to render a contract
+  text field. It renders `NEEDS_SOURCE` as a visible amber placeholder.
+- Playwright e2e smoke suite (`npm run test:e2e`, 4 tests, passing) covering the
+  mesh-to-catalog join, the banner, the placeholder rule, and the ghost toggle.
+
+### Verified, not assumed
+
+- All 68 cortical plus 32 subcortical glb node names join to `regions.json` both
+  ways, with no orphans. A mismatch logs a `[contract]` console error and fails
+  an e2e test.
+- The literal string `NEEDS_SOURCE` never reaches the screen. Asserted in e2e.
+- Clicking `Left precentral` highlights the precentral gyrus in anatomically the
+  right place, which confirms the mesh, the catalog, and the coordinate
+  transform all agree.
+
+### Decisions taken, please review
+
+1. **Coordinate transform.** Both glbs are in raw MNI (x right, y anterior,
+   z superior) with no baked node transform. The atlas is rotated -90 degrees
+   about X to reach three.js y-up. Both layers share one centering offset
+   (the cortical bounding box centre, MNI -0.45, -14.85, 0.7). Centering them
+   independently would silently pull the subcortical structures out of register
+   with the cortex, so this must stay a single shared transform.
+2. **Client-side data loading.** `regions.json` is fetched in the browser rather
+   than server-rendered, so the app stays a pure static-asset consumer with no
+   runtime backend, matching `docs/ARCHITECTURE.md`.
+3. **Playwright added as a dev dependency.** It is the E2E framework the repo
+   standards already name, and it is the only way to verify WebGL output. In CI
+   it needs Chromium on SwiftShader, which is slow, hence the generous timeouts
+   in `playwright.config.ts`.
+
+### Contract gaps found (Tabeen, please confirm)
+
+- **`waveform.json` shape is undocumented.** `docs/DATA_CONTRACT.md` names the
+  file path but never specifies its contents. The emitted file has
+  `sampling_rate_hz`, `window`, `onset_s`, `duration_s`, `units`,
+  `involved_channels`, and `channels[{name, values}]`. It is typed in
+  `frontend/src/lib/contract/types.ts` from the real file and carries a
+  `TODO(contract)` marker. This needs a `contract/*` PR to become an agreed
+  shape rather than an observed one, before the eeg renderer is built.
+- **Glioma has no `region_mappings`.** Step 2 for the tumor case will highlight
+  zero regions until the overlap pipeline lands. The frontend will show an
+  explicit "involvement not yet computed" state rather than an empty brain that
+  reads as "no regions affected". Flagging so the demo narrative accounts for it.
+
+### Note on the design skill
+
+Root `CLAUDE.md` requires the `frontend-design` skill for UI work. That exact
+skill is not installed in this environment. `ecc:frontend-design-direction` was
+used instead and the direction is recorded in the token block at the top of
+`src/app/globals.css`. Worth installing the canonical skill from
+`anthropics/skills` so both developers work from the same guidance.
+
+### Next session (frontend)
+
+Step 2: disorder and case selectors from `disorders.json`, role-coloured
+grouped highlighting driven by `region_mappings`, and the lazy-loaded Niivue
+evidence viewer starting with `lesion-overlay`. The one-WebGL-context-at-a-time
+rule is already set up for this, since the R3F canvas is dynamically imported
+and can be unmounted when Niivue mounts.
+
 ## 2026-07-20 — Data contract wired to real data (first PR)
 
 Branch: `data/wire-contract-fixtures`. Turns the contract spec into a live,

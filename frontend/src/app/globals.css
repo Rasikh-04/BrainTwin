@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+/*
+ * BrainTwin design tokens.
+ *
+ * Direction: a clinical instrument, not a landing page. The brain is the
+ * interface; chrome is thin, translucent, and sits over a full-bleed canvas so
+ * the anatomy is never boxed into a card. Dark by default because a bright UI
+ * washes out the shaded 3D surface and the greyscale scans in step 2.
+ *
+ * The palette is deliberately multi-hue and semantically assigned. Colour here
+ * carries medical meaning, so it is never chosen decoratively:
+ *   cyan   = user selection (interaction, no clinical claim)
+ *   ember  = primary involvement    (role: "primary")
+ *   violet = secondary involvement  (role: "secondary")
+ *   amber  = pending expert review / unsourced content
+ * Nothing else may use these four hues.
+ */
+
+@theme {
+  /* Surfaces: cool graphite, stepped so panels read as layers over the canvas */
+  --color-void: #070a0e;
+  --color-surface-0: #0b0f15;
+  --color-surface-1: #121822;
+  --color-surface-2: #1a222e;
+  --color-line: #263040;
+  --color-line-strong: #33415a;
+
+  /* Text */
+  --color-ink: #e6ecf3;
+  --color-ink-muted: #97a5b8;
+  --color-ink-faint: #64748b;
+
+  /* Semantic accents */
+  --color-select: #22d3ee;
+  --color-select-dim: #0e7490;
+  --color-primary-role: #fb7185;
+  --color-secondary-role: #a78bfa;
+  --color-pending: #f0b429;
+
+  /* Evidence strength: computed involvement vs cited typical pattern */
+  --color-computed: #34d399;
+  --color-cited: #7dd3fc;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+
+  --radius-panel: 10px;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--color-void);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  /* The atlas owns the viewport; only panels scroll. */
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+/*
+ * Identifiers (region_id, case_id, PMIDs, overlap numbers) are always
+ * monospace. In a traceability tool the machine-readable key is the thing a
+ * reviewer cross-references against the dataset, so it gets its own voice.
+ */
+.ident {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.02em;
+  color: var(--color-ink-faint);
+}
+
+.panel {
+  background: color-mix(in oklab, var(--color-surface-1) 88%, transparent);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-panel);
+}
+
+/* Thin scrollbars so a long region list does not add visual weight. */
+.scroll-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-strong) transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
