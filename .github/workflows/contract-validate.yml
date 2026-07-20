@@ -1,0 +1,22 @@
+name: contract-validate
+
+# Runs the contract validator on every pull request. A red validator blocks merge
+# (docs/DATA_CONTRACT.md). Structural checks only: patient-derived assets are
+# git-ignored, so --check-assets is a local step, not a CI one. Committed atlas glbs
+# are validated against regions.json here.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pygltflib
+      - run: python3 contract/validate.py

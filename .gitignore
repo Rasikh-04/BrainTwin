@@ -1,0 +1,20 @@
+# Raw downloaded datasets (never committed; fetched via download/ scripts)
+data/raw/*
+
+# Patient-derived processed assets: kept OUT of git on purpose.
+# DUAs (BraTS, OASIS, CHB-MIT) restrict redistribution and there is no git-lfs here.
+# Regenerate locally with: python3 backend/build_dataset.py
+# (NIfTI scans/masks, EEG spectrograms/waveforms, atrophy pairs)
+frontend/public/assets/cases/
+
+# Atlas meshes ARE committed (CC-licensed): frontend/public/assets/atlas/*.glb
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Node / Next.js
+node_modules/
+.next/

@@ -1,0 +1,19 @@
+{
+  "case_id": "brats-001",
+  "disorder_id": "glioma",
+  "source_dataset": "BraTS",
+  "anonymized_meta": {},
+  "report_summary": "NEEDS_SOURCE",
+  "evidence": {
+    "renderer": "lesion-overlay",
+    "base": "/assets/cases/brats-001/base.nii.gz",
+    "mask": "/assets/cases/brats-001/mask.nii.gz",
+    "mask_labels": {
+      "1": "necrotic core",
+      "2": "edema",
+      "4": "enhancing tumor"
+    }
+  },
+  "region_mappings": [],
+  "review_status": "pending"
+}

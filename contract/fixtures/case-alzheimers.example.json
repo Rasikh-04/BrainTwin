@@ -1,0 +1,23 @@
+{
+  "case_id": "oasis-014",
+  "disorder_id": "alzheimers",
+  "source_dataset": "OASIS",
+  "anonymized_meta": { "age_band": "70-79", "sex": "M", "cdr": 1 },
+  "report_summary": "NEEDS_SOURCE",
+  "evidence": {
+    "renderer": "atrophy-pair",
+    "baseline": "/assets/cases/oasis-014/baseline.nii.gz",
+    "followup": "/assets/cases/oasis-014/followup.nii.gz"
+  },
+  "region_mappings": [
+    {
+      "region_id": "aseg-left-hippocampus",
+      "role": "primary",
+      "evidence_type": "atrophy",
+      "overlap_metric": null,
+      "provenance": "literature pattern (source NEEDS_SOURCE) plus visible atrophy in scan pair; case CDR 1; not a per-voxel segmentation",
+      "notes": "typical-pattern claim, not this patient's segmented region"
+    }
+  ],
+  "review_status": "pending"
+}
