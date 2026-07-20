@@ -1,0 +1,35 @@
+[
+  {
+    "region_id": "ctx-lh-superiorfrontal",
+    "name": "Left superior frontal gyrus",
+    "atlas_source": "desikan-killiany",
+    "hemisphere": "left",
+    "structure_type": "cortical",
+    "centroid_mni": [-12.4, 34.1, 48.9],
+    "normal_function_description": "NEEDS_SOURCE",
+    "description_source": null,
+    "review_status": "pending"
+  },
+  {
+    "region_id": "ctx-lh-superiortemporal",
+    "name": "Left superior temporal gyrus",
+    "atlas_source": "desikan-killiany",
+    "hemisphere": "left",
+    "structure_type": "cortical",
+    "centroid_mni": [-54.2, -16.8, 2.1],
+    "normal_function_description": "NEEDS_SOURCE",
+    "description_source": null,
+    "review_status": "pending"
+  },
+  {
+    "region_id": "aseg-left-hippocampus",
+    "name": "Left hippocampus",
+    "atlas_source": "aseg",
+    "hemisphere": "left",
+    "structure_type": "subcortical",
+    "centroid_mni": [-25.1, -20.4, -12.7],
+    "normal_function_description": "NEEDS_SOURCE",
+    "description_source": null,
+    "review_status": "pending"
+  }
+]

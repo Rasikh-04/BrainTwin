@@ -1,0 +1,48 @@
+[
+  {
+    "disorder_id": "glioma",
+    "name": "Glioma (brain tumor)",
+    "category": "structural",
+    "evidence_renderer": "lesion-overlay",
+    "description": "NEEDS_SOURCE",
+    "description_source": null,
+    "typical_affected_regions": [],
+    "case_ids": ["brats-001"],
+    "review_status": "pending"
+  },
+  {
+    "disorder_id": "ischemic-stroke",
+    "name": "Ischemic stroke",
+    "category": "structural",
+    "evidence_renderer": "lesion-overlay",
+    "description": "NEEDS_SOURCE",
+    "description_source": null,
+    "typical_affected_regions": [],
+    "case_ids": ["atlas-004"],
+    "review_status": "pending"
+  },
+  {
+    "disorder_id": "epilepsy",
+    "name": "Epilepsy (seizure)",
+    "category": "functional",
+    "evidence_renderer": "eeg",
+    "description": "NEEDS_SOURCE",
+    "description_source": null,
+    "typical_affected_regions": [],
+    "case_ids": ["chbmit-01"],
+    "review_status": "pending"
+  },
+  {
+    "disorder_id": "alzheimers",
+    "name": "Alzheimer's disease",
+    "category": "neurodegenerative",
+    "evidence_renderer": "atrophy-pair",
+    "description": "NEEDS_SOURCE",
+    "description_source": null,
+    "typical_affected_regions": [
+      { "region_id": "aseg-left-hippocampus", "source": "NEEDS_SOURCE", "note": "typical early atrophy in AD" }
+    ],
+    "case_ids": ["oasis-014"],
+    "review_status": "pending"
+  }
+]

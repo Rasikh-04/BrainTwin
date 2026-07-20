@@ -1,0 +1,24 @@
+{
+  "case_id": "brats-001",
+  "disorder_id": "glioma",
+  "source_dataset": "BraTS",
+  "anonymized_meta": { "age_band": "40-49", "sex": "F" },
+  "report_summary": "NEEDS_SOURCE",
+  "evidence": {
+    "renderer": "lesion-overlay",
+    "base": "/assets/cases/brats-001/base.nii.gz",
+    "mask": "/assets/cases/brats-001/mask.nii.gz",
+    "mask_labels": { "1": "necrotic core", "2": "edema", "4": "enhancing tumor" }
+  },
+  "region_mappings": [
+    {
+      "region_id": "ctx-lh-superiortemporal",
+      "role": "primary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": { "overlap_voxels": 812, "overlap_fraction_of_region": 0.19 },
+      "provenance": "computed: mask.nii.gz intersect DK atlas in MNI space; primary if fraction >= 0.10",
+      "notes": ""
+    }
+  ],
+  "review_status": "pending"
+}
