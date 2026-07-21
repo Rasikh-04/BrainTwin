@@ -4,12 +4,14 @@ import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 
 import { AtlasSkeleton } from "@/components/atlas/AtlasSkeleton";
+import { DissectionBar } from "@/components/atlas/DissectionBar";
 import { HoverReadout } from "@/components/atlas/HoverReadout";
 import { LayerControls } from "@/components/atlas/LayerControls";
+import { ViewControls } from "@/components/atlas/ViewControls";
 import { ReviewBanner } from "@/components/chrome/ReviewBanner";
 import { RegionIndex } from "@/components/panel/RegionIndex";
 import { RegionPanel } from "@/components/panel/RegionPanel";
-import { loadRegions } from "@/lib/contract/load";
+import { loadDisorders, loadRegions } from "@/lib/contract/load";
 import { useAtlasStore } from "@/store/useAtlasStore";
 
 /**
@@ -27,6 +29,7 @@ const AtlasCanvas = dynamic(
 export function AtlasExplorer() {
   const regions = useAtlasStore((s) => s.regions);
   const setRegions = useAtlasStore((s) => s.setRegions);
+  const setDisorders = useAtlasStore((s) => s.setDisorders);
   const loadError = useAtlasStore((s) => s.loadError);
   const setLoadError = useAtlasStore((s) => s.setLoadError);
 
@@ -52,10 +55,21 @@ export function AtlasExplorer() {
         if (!cancelled) setIsLoading(false);
       });
 
+    // Disorders are small and drive the region panel's linked-disorder section.
+    // A failure here is non-fatal to the atlas, so it is logged, not surfaced.
+    loadDisorders()
+      .then((loaded) => {
+        if (!cancelled) setDisorders(loaded);
+      })
+      .catch((error: unknown) => {
+        if (!cancelled)
+          console.error("[contract] failed to load disorders.json", error);
+      });
+
     return () => {
       cancelled = true;
     };
-  }, [setRegions, setLoadError]);
+  }, [setRegions, setDisorders, setLoadError]);
 
   const pendingCount = regions.filter(
     (r) => r.review_status !== "reviewed",
@@ -88,7 +102,7 @@ export function AtlasExplorer() {
           <RegionIndex />
         </aside>
 
-        <div className="relative min-w-0 flex-1">
+        <div className="stage relative min-w-0 flex-1">
           {/* The atlas is the interface: full-bleed canvas, chrome floating over it. */}
           {isLoading ? <AtlasSkeleton /> : <AtlasCanvas />}
 
@@ -102,8 +116,17 @@ export function AtlasExplorer() {
             <LayerControls />
           </div>
 
+          {/* Camera view presets, centred at the top under the header row. */}
+          <div className="pointer-events-none absolute inset-x-0 top-20 flex justify-center">
+            <ViewControls />
+          </div>
+
           <div className="pointer-events-none absolute bottom-3 left-3">
             <HoverReadout />
+          </div>
+
+          <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center">
+            <DissectionBar />
           </div>
 
           <p className="ident pointer-events-none absolute bottom-3 right-3 text-right">

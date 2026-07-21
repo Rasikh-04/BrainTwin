@@ -1,6 +1,11 @@
 # Raw downloaded datasets (never committed; fetched via download/ scripts)
 data/raw/*
 
+# Source anatomy meshes for the detailing layers (veins/arteries/nerves).
+# Fetched via backend/download_detailing_assets.sh; large and re-downloadable.
+# Derived, aligned glbs that DO ship go in frontend/public/assets/atlas/.
+backend/assets_raw/
+
 # Patient-derived processed assets: kept OUT of git on purpose.
 # DUAs (BraTS, OASIS, CHB-MIT) restrict redistribution and there is no git-lfs here.
 # Regenerate locally with: python3 backend/build_dataset.py

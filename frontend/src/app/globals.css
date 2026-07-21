@@ -18,25 +18,27 @@
  */
 
 @theme {
-  /* Surfaces: cool graphite, stepped so panels read as layers over the canvas */
-  --color-void: #070a0e;
-  --color-surface-0: #0b0f15;
-  --color-surface-1: #121822;
-  --color-surface-2: #1a222e;
-  --color-line: #263040;
-  --color-line-strong: #33415a;
+  /* Surfaces: cool graphite, stepped so panels read as layers over the canvas.
+     Lifted off pure black so the shaded 3D surface has something to sit against
+     and never dissolves into the background. */
+  --color-void: #0d1117;
+  --color-surface-0: #10151d;
+  --color-surface-1: #161d28;
+  --color-surface-2: #202a38;
+  --color-line: #2c3849;
+  --color-line-strong: #3d4c63;
 
-  /* Text */
-  --color-ink: #e6ecf3;
-  --color-ink-muted: #97a5b8;
-  --color-ink-faint: #64748b;
+  /* Text — raised for contrast on the graphite surfaces */
+  --color-ink: #f0f4f9;
+  --color-ink-muted: #b4c1d3;
+  --color-ink-faint: #8494a8;
 
   /* Semantic accents */
-  --color-select: #22d3ee;
+  --color-select: #38d6ef;
   --color-select-dim: #0e7490;
   --color-primary-role: #fb7185;
   --color-secondary-role: #a78bfa;
-  --color-pending: #f0b429;
+  --color-pending: #f5b638;
 
   /* Evidence strength: computed involvement vs cited typical pattern */
   --color-computed: #34d399;
@@ -76,10 +78,41 @@ body {
 }
 
 .panel {
-  background: color-mix(in oklab, var(--color-surface-1) 88%, transparent);
+  background: color-mix(in oklab, var(--color-surface-1) 90%, transparent);
   backdrop-filter: blur(14px);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-panel);
+  box-shadow: 0 8px 28px -14px rgb(0 0 0 / 0.6);
+}
+
+/*
+ * The 3D stage. A soft off-centre radial pool lifts the brain off the
+ * background so its shaded surface has depth to sit against, instead of a flat
+ * black void. The WebGL canvas renders transparent over this.
+ */
+.stage {
+  background:
+    radial-gradient(
+      120% 120% at 42% 32%,
+      #1c2634 0%,
+      #141b25 34%,
+      #0d1117 68%,
+      #090c11 100%
+    );
+}
+
+/*
+ * Segmented control (view presets, dissection modes). One quiet container,
+ * the active segment lifts. No card-in-card nesting.
+ */
+.segment {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--color-surface-0) 70%, transparent);
+  border: 1px solid var(--color-line);
 }
 
 /* Thin scrollbars so a long region list does not add visual weight. */

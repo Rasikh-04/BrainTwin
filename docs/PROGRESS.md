@@ -5,6 +5,74 @@ landed, what is deferred and who owns it, and the risks to keep in view. It is
 not a spec (the specs are `docs/DATA_CONTRACT.md` and `docs/MEDICAL_ACCURACY.md`);
 it is the shared state of the build.
 
+## 2026-07-21 Frontend session 2: visual overhaul, dissection, anatomical views
+
+Branch: `fe/atlas-explorer`. Owner: Abdul Mannan. A visual-quality and
+interaction pass on step 1, driven by two reference images and direct feedback
+that the old dark/desaturated look had poor contrast and lighting. Verified in a
+real browser; typecheck, lint, and the e2e suite (now 6 tests) are green.
+
+### What landed
+
+- Reworked the design tokens: lifted the whole surface ramp off pure black to a
+  graphite `#0d1117` base, raised text contrast, and added a soft radial CSS
+  "stage" gradient behind a now-transparent WebGL canvas so the brain sits in a
+  pool of light instead of on flat black.
+- Rebuilt the 3D look: a studio three-point light rig (warm key, cool fill, cool
+  back-rim) and a `MeshPhysicalMaterial` with faint clearcoat + sheen, so the
+  cortex reads as living tissue. Warm grey-pink cortex over cooler deep grey.
+- Dissection: `Isolate` (view only this region, hide the rest) and `Hide`
+  (peel a region away), both from the region panel, plus a `DissectionBar` that
+  names the current cut and offers a single "Reset model" so no one gets stranded
+  in a partial view. Visibility is a per-mesh flag applied through the existing
+  imperative store subscription — no geometry rebuild, no context teardown.
+- Anatomical view presets (`Sagittal`, `Coronal`, `Axial`, `3/4`) with a smooth
+  eased camera tween, plus a `Focus selected` modifier: off frames the whole
+  brain centred; on brings the selected region to the front (the sagittal-style
+  close-up the reference showed). Both requested spacings are now explicit modes.
+- Layer controls now split Brain (Cortex, Subcortical, Ghost cortex) from
+  Detailing (Veins, Arteries, Nerves). The detailing layers are wired but render
+  as disabled "soon" toggles until their meshes are sourced — honest about what
+  is and is not in the model.
+- Region panel redesigned toward the Neurotorium reference: region name +
+  isolate/hide actions, the sourced "Normal function" placeholder, a new
+  `Linked disorders` section, and the atlas meta rows.
+
+### Medical-honesty notes (please review)
+
+- The `Linked disorders` section and the region descriptions are the honest,
+  data-driven versions, not the rich prose in the reference screenshot. Region
+  `normal_function_description` is still `NEEDS_SOURCE` for all 100 regions, so it
+  renders as the pending placeholder. Links come only from a disorder's
+  `typical_affected_regions` (cited typical patterns), which are currently empty,
+  so every region truthfully shows "no cited pattern references this region yet".
+  The mechanism is real and lights up the moment cited data lands; nothing is
+  invented to fill the reference's look. This is per `docs/MEDICAL_ACCURACY.md`.
+- Per-case computed involvement (tumour/stroke mask ∩ region) is deliberately NOT
+  asserted from the atlas panel; it belongs to the step-2 evidence view. The
+  panel copy says so.
+
+### Detailing assets (veins/arteries/nerves) — sourcing handoff
+
+The reference vessels are from Visible Body (proprietary), so they can't be
+reused. Added `docs/ASSET_SOURCING.md` (vetted free sources: Z-Anatomy CC-BY-SA,
+BodyParts3D, NIH 3D, with the MNI-alignment caveat) and a resumable
+`backend/download_detailing_assets.sh` (`curl -C -` / shallow git clone). The
+frontend layers are ready; wiring a mesh in is a one-line change (drop the
+`pending` prop) once a glb is aligned to the atlas frame.
+
+### New files
+
+`components/atlas/ViewControls.tsx`, `components/atlas/DissectionBar.tsx`,
+`components/panel/RegionLinks.tsx`, `lib/contract/links.ts`,
+`docs/ASSET_SOURCING.md`, `backend/download_detailing_assets.sh`.
+
+### Next session (frontend)
+
+Step 2 is still the big one: disorder/case selectors, role-coloured grouped
+highlighting from `region_mappings`, and the lazy Niivue evidence viewer. The
+`Linked disorders` section gives step 2 a natural entry point from a region.
+
 ## 2026-07-21 Frontend session 1: Next.js scaffold and step 1 atlas explorer
 
 Branch: `fe/atlas-explorer`. Owner: Abdul Mannan. Step 1 of the two-step UX is

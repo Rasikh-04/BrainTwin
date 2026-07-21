@@ -29,11 +29,13 @@ interface BrainLayerProps {
   tissueColor: string;
 }
 
-const SELECT_COLOR = new THREE.Color("#22d3ee");
+const SELECT_COLOR = new THREE.Color("#38d6ef");
 const HOVER_COLOR = new THREE.Color("#0e7490");
 const BLACK = new THREE.Color("#000000");
 
-const GHOST_OPACITY = 0.18;
+const GHOST_OPACITY = 0.16;
+/** Regions peeled away by dissection fade rather than vanish, so the cut reads. */
+const DISSECT_OPACITY = 0;
 
 export function BrainLayer({ url, layer, tissueColor }: BrainLayerProps) {
   // `true` enables the Draco decoder. It is only fetched if a glb is actually
@@ -59,13 +61,22 @@ export function BrainLayer({ url, layer, tissueColor }: BrainLayerProps) {
     scene.traverse((object) => {
       if (!(object instanceof THREE.Mesh)) return;
 
-      object.material = new THREE.MeshStandardMaterial({
+      // Physical material with a faint clearcoat reads as living tissue under
+      // the studio lights: matte gyral surface with a soft wet sheen in the
+      // sulci, instead of the flat clay of a plain standard material. Sheen
+      // adds the slight backscatter that makes a brain look soft, not carved.
+      const material = new THREE.MeshPhysicalMaterial({
         color: base.clone(),
-        roughness: 0.82,
-        metalness: 0.02,
-        // Cortical folds read as mush without a little front-to-back falloff.
+        roughness: 0.74,
+        metalness: 0,
+        clearcoat: 0.18,
+        clearcoatRoughness: 0.55,
+        sheen: 0.4,
+        sheenRoughness: 0.9,
+        sheenColor: new THREE.Color("#f0c9c0"),
         flatShading: false,
       });
+      object.material = material;
       object.castShadow = false;
       object.receiveShadow = false;
       byRegionId.set(object.name, object);
@@ -90,19 +101,41 @@ export function BrainLayer({ url, layer, tissueColor }: BrainLayerProps) {
     }
   }, [meshes, regionsById, url]);
 
-  /** Imperative highlight application — no React render involved. */
-  type ApplyHighlight = (
-    selectedId: string | null,
-    hoveredId: string | null,
-  ) => void;
-  const applyHighlight = useRef<ApplyHighlight>(() => {});
+  /**
+   * Imperative highlight + dissection application — no React render involved.
+   * Reads the whole store state so selection, hover, isolation, and per-region
+   * hiding all resolve in one pass over this layer's meshes.
+   */
+  type ApplyState = (state: {
+    selectedRegionId: string | null;
+    hoveredRegionId: string | null;
+    isolatedRegionId: string | null;
+    hiddenRegionIds: Set<string>;
+  }) => void;
+  const applyState = useRef<ApplyState>(() => {});
 
   useEffect(() => {
-    applyHighlight.current = (selectedId, hoveredId) => {
+    applyState.current = ({
+      selectedRegionId,
+      hoveredRegionId,
+      isolatedRegionId,
+      hiddenRegionIds,
+    }) => {
       for (const [regionId, mesh] of meshes) {
-        const material = mesh.material as THREE.MeshStandardMaterial;
-        const isSelected = regionId === selectedId;
-        const isHovered = regionId === hoveredId;
+        const material = mesh.material as THREE.MeshPhysicalMaterial;
+
+        // Dissection resolves first: an isolated region hides every other
+        // region across every layer; a hidden region is removed outright.
+        const isolatedElsewhere =
+          isolatedRegionId !== null && regionId !== isolatedRegionId;
+        const removed = hiddenRegionIds.has(regionId) || isolatedElsewhere;
+        mesh.visible = !removed;
+        if (removed) {
+          material.opacity = DISSECT_OPACITY;
+          continue;
+        }
+        const isSelected = regionId === selectedRegionId;
+        const isHovered = regionId === hoveredRegionId;
 
         if (isSelected) {
           material.emissive.copy(SELECT_COLOR);
@@ -129,12 +162,9 @@ export function BrainLayer({ url, layer, tissueColor }: BrainLayerProps) {
       }
     };
 
-    const { selectedRegionId, hoveredRegionId } = useAtlasStore.getState();
-    applyHighlight.current(selectedRegionId, hoveredRegionId);
+    applyState.current(useAtlasStore.getState());
 
-    return useAtlasStore.subscribe((state) =>
-      applyHighlight.current(state.selectedRegionId, state.hoveredRegionId),
-    );
+    return useAtlasStore.subscribe((state) => applyState.current(state));
   }, [meshes, ghostCortex, layer]);
 
   const handlePointerOver = (event: ThreeEvent<PointerEvent>) => {

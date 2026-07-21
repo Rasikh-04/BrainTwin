@@ -83,3 +83,39 @@ test("ghost cortex toggles without tearing down the scene", async ({ page }) => 
   await expect(page.locator("canvas")).toBeVisible();
   expect(errors).toEqual([]);
 });
+
+test("isolating a region shows a reset path and clears the whole model", async ({
+  page,
+}) => {
+  const errors = await openAtlas(page);
+
+  await page.getByRole("button", { name: /Left precentral/ }).first().click();
+
+  const panel = page.getByRole("complementary", { name: "Region detail" });
+  await panel.getByRole("button", { name: "Isolate" }).click();
+
+  // The dissection status bar must appear so the user can always get back to
+  // the whole model — an isolated view with no exit is a trap.
+  await expect(page.getByText("Isolated: Left precentral")).toBeVisible();
+  await expect(panel.getByRole("button", { name: "Exit isolate" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Reset model" }).click();
+  await expect(page.getByText("Isolated: Left precentral")).toHaveCount(0);
+
+  // The canvas survives dissection — visibility is a per-mesh flag, not a
+  // geometry rebuild or a context teardown.
+  await expect(page.locator("canvas")).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test("detailing layers are present but disabled until their meshes are sourced", async ({
+  page,
+}) => {
+  await openAtlas(page);
+
+  // Honest about what is in the model: vessels/nerves are wired but not loaded,
+  // so they must not read as toggleable content that simply does nothing.
+  for (const name of ["Veins", "Arteries", "Nerves"]) {
+    await expect(page.getByRole("button", { name: new RegExp(name) })).toBeDisabled();
+  }
+});

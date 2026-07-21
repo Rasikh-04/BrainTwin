@@ -1,65 +1,117 @@
 "use client";
 
-import { useAtlasStore, type LayerKey } from "@/store/useAtlasStore";
+import {
+  useAtlasStore,
+  BRAIN_LAYERS,
+  DETAIL_LAYERS,
+  type LayerKey,
+} from "@/store/useAtlasStore";
 
-function Toggle({
-  active,
-  onClick,
-  children,
+const LAYER_LABELS: Record<LayerKey, string> = {
+  cortical: "Cortex",
+  subcortical: "Subcortical",
+  veins: "Veins",
+  arteries: "Arteries",
+  nerves: "Nerves",
+};
+
+function LayerToggle({
+  layer,
+  pending = false,
 }: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
+  layer: LayerKey;
+  pending?: boolean;
 }) {
+  const active = useAtlasStore((s) => s.visibleLayers[layer]);
+  const toggleLayer = useAtlasStore((s) => s.toggleLayer);
+
   return (
     <button
       type="button"
-      onClick={onClick}
+      disabled={pending}
+      onClick={() => toggleLayer(layer)}
       aria-pressed={active}
-      className={`rounded px-2.5 py-1 text-[11.5px] transition-colors ${
-        active
-          ? "bg-select/15 text-select"
-          : "text-ink-faint hover:bg-surface-2 hover:text-ink-muted"
+      title={
+        pending
+          ? "Detailing mesh not loaded yet — see docs/ASSET_SOURCING.md"
+          : `Toggle ${LAYER_LABELS[layer]} layer`
+      }
+      className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-[11.5px] transition-colors ${
+        pending
+          ? "cursor-not-allowed text-ink-faint/60"
+          : active
+            ? "bg-select/15 text-select"
+            : "text-ink-faint hover:bg-surface-2 hover:text-ink-muted"
       }`}
     >
-      {children}
+      <span
+        aria-hidden
+        className={`h-1.5 w-1.5 rounded-full ${
+          pending
+            ? "bg-ink-faint/40"
+            : active
+              ? "bg-select"
+              : "bg-line-strong"
+        }`}
+      />
+      {LAYER_LABELS[layer]}
+      {pending && (
+        <span className="ident text-[9px] uppercase tracking-wide text-ink-faint/70">
+          soon
+        </span>
+      )}
     </button>
   );
 }
 
 /**
- * Layer visibility for the atlas.
+ * Layer visibility and dissection helpers for the atlas.
+ *
+ * Brain layers are live. The three detailing layers (veins, arteries, nerves)
+ * are wired but their meshes are sourced separately (docs/ASSET_SOURCING.md),
+ * so they render as disabled toggles until an asset is present — honest about
+ * what is and is not in the model.
  *
  * "Ghost cortex" fades the cortical surface so subcortical structures can be
  * seen and picked through it — a material opacity change only, never a geometry
  * change, per the rendering rules in frontend/CLAUDE.md.
  */
 export function LayerControls() {
-  const visibleLayers = useAtlasStore((s) => s.visibleLayers);
-  const toggleLayer = useAtlasStore((s) => s.toggleLayer);
   const ghostCortex = useAtlasStore((s) => s.ghostCortex);
   const toggleGhostCortex = useAtlasStore((s) => s.toggleGhostCortex);
 
-  const layers: { key: LayerKey; label: string }[] = [
-    { key: "cortical", label: "Cortex" },
-    { key: "subcortical", label: "Subcortical" },
-  ];
-
   return (
-    <div className="panel pointer-events-auto flex items-center gap-0.5 p-1">
-      {layers.map(({ key, label }) => (
-        <Toggle
-          key={key}
-          active={visibleLayers[key]}
-          onClick={() => toggleLayer(key)}
+    <div className="panel pointer-events-auto flex flex-col gap-1 p-1.5">
+      <div className="flex items-center gap-0.5">
+        <span className="ident px-1.5 text-[9px] uppercase tracking-[0.13em]">
+          Brain
+        </span>
+        {BRAIN_LAYERS.map((layer) => (
+          <LayerToggle key={layer} layer={layer} />
+        ))}
+        <span aria-hidden className="mx-0.5 h-4 w-px bg-line" />
+        <button
+          type="button"
+          onClick={toggleGhostCortex}
+          aria-pressed={ghostCortex}
+          className={`rounded px-2.5 py-1 text-[11.5px] transition-colors ${
+            ghostCortex
+              ? "bg-select/15 text-select"
+              : "text-ink-faint hover:bg-surface-2 hover:text-ink-muted"
+          }`}
         >
-          {label}
-        </Toggle>
-      ))}
-      <span aria-hidden className="mx-0.5 h-4 w-px bg-line" />
-      <Toggle active={ghostCortex} onClick={toggleGhostCortex}>
-        Ghost cortex
-      </Toggle>
+          Ghost cortex
+        </button>
+      </div>
+
+      <div className="flex items-center gap-0.5 border-t border-line/60 pt-1">
+        <span className="ident px-1.5 text-[9px] uppercase tracking-[0.13em]">
+          Detailing
+        </span>
+        {DETAIL_LAYERS.map((layer) => (
+          <LayerToggle key={layer} layer={layer} pending />
+        ))}
+      </div>
     </div>
   );
 }
