@@ -6,6 +6,7 @@ import type { ThreeEvent } from "@react-three/fiber";
 import * as THREE from "three";
 
 import { useAtlasStore, type LayerKey } from "@/store/useAtlasStore";
+import { wasDragged } from "@/lib/atlas/pointerDrag";
 
 /**
  * Renders one atlas glb (cortical or subcortical).
@@ -186,6 +187,7 @@ export function BrainLayer({ url, layer, tissueColor }: BrainLayerProps) {
   const handleClick = (event: ThreeEvent<MouseEvent>) => {
     if (!visible) return;
     event.stopPropagation();
+    if (wasDragged(event.nativeEvent.clientX, event.nativeEvent.clientY)) return;
     const name = event.object.name;
     if (regionsById.has(name)) selectRegion(name);
   };

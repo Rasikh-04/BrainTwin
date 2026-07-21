@@ -113,7 +113,10 @@ export const useAtlasStore = create<AtlasState>((set) => ({
 
   setLoadError: (message) => set({ loadError: message }),
 
-  selectRegion: (regionId) => set({ selectedRegionId: regionId }),
+  // Selecting a region frames it (the "bring it to the front" behaviour);
+  // clearing the selection returns the camera to the whole-brain view.
+  selectRegion: (regionId) =>
+    set({ selectedRegionId: regionId, focusSelected: regionId !== null }),
 
   hoverRegion: (regionId) => set({ hoveredRegionId: regionId }),
 
