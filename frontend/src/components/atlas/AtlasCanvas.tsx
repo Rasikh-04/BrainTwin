@@ -33,9 +33,10 @@ import { recordPointerDown, wasDragged } from "@/lib/atlas/pointerDrag";
  */
 const MNI_BBOX_CENTER: [number, number, number] = [-0.45, -14.85, 0.7];
 
-/** Tissue tones. Warm grey-pink cortex over cooler grey-blue deep structures. */
-const CORTICAL_TISSUE = "#c8b0ab";
-const SUBCORTICAL_TISSUE = "#9aa6bc";
+/** Tissue tones. A richer anatomical rose cortex over cooler grey-blue deep
+ *  structures, so the surface reads as living tissue rather than pale clay. */
+const CORTICAL_TISSUE = "#d9948c";
+const SUBCORTICAL_TISSUE = "#93a1ba";
 
 const WHOLE_BRAIN_DISTANCE = 415;
 const FOCUS_DISTANCE = 185;

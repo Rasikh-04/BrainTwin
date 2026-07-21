@@ -50,6 +50,12 @@ interface AtlasState {
    * it. Implemented as a material opacity change, never a geometry change.
    */
   ghostCortex: boolean;
+  /**
+   * Recolour every region with its own distinct hue for easy differentiation.
+   * A purely visual aid (see lib/atlas/regionColor.ts); it asserts nothing
+   * clinical and is separate from the reserved involvement hues used in step 2.
+   */
+  regionColorMode: boolean;
 
   /**
    * Dissection. `isolatedRegionId` shows only that one region and hides
@@ -73,6 +79,7 @@ interface AtlasState {
   hoverRegion: (regionId: string | null) => void;
   toggleLayer: (layer: LayerKey) => void;
   toggleGhostCortex: () => void;
+  toggleRegionColorMode: () => void;
 
   isolateRegion: (regionId: string | null) => void;
   hideRegion: (regionId: string) => void;
@@ -98,6 +105,7 @@ export const useAtlasStore = create<AtlasState>((set) => ({
     nerves: false,
   },
   ghostCortex: false,
+  regionColorMode: false,
 
   isolatedRegionId: null,
   hiddenRegionIds: new Set(),
@@ -130,6 +138,9 @@ export const useAtlasStore = create<AtlasState>((set) => ({
 
   toggleGhostCortex: () =>
     set((state) => ({ ghostCortex: !state.ghostCortex })),
+
+  toggleRegionColorMode: () =>
+    set((state) => ({ regionColorMode: !state.regionColorMode })),
 
   isolateRegion: (regionId) => set({ isolatedRegionId: regionId }),
 

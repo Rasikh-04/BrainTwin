@@ -84,6 +84,29 @@ test("ghost cortex toggles without tearing down the scene", async ({ page }) => 
   expect(errors).toEqual([]);
 });
 
+test("region colours toggle recolours regions without tearing down the scene", async ({
+  page,
+}) => {
+  const errors = await openAtlas(page);
+
+  const colours = page.getByRole("button", { name: "Region colours" });
+  await expect(colours).toHaveAttribute("aria-pressed", "false");
+
+  await colours.click();
+  await expect(colours).toHaveAttribute("aria-pressed", "true");
+
+  // Colour mode is a material tint swap, so the context and picking survive it:
+  // the canvas stays up and a region is still selectable afterwards.
+  await expect(page.locator("canvas")).toBeVisible();
+  await page.getByRole("button", { name: /Left precentral/ }).first().click();
+  const panel = page.getByRole("complementary", { name: "Region detail" });
+  await expect(panel.getByText("ctx-lh-precentral")).toBeVisible();
+
+  await colours.click();
+  await expect(colours).toHaveAttribute("aria-pressed", "false");
+  expect(errors).toEqual([]);
+});
+
 test("isolating a region shows a reset path and clears the whole model", async ({
   page,
 }) => {
