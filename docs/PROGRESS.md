@@ -5,6 +5,157 @@ landed, what is deferred and who owns it, and the risks to keep in view. It is
 not a spec (the specs are `docs/DATA_CONTRACT.md` and `docs/MEDICAL_ACCURACY.md`);
 it is the shared state of the build.
 
+## 2026-07-21 Frontend session 2: visual overhaul, dissection, anatomical views
+
+Branch: `fe/atlas-explorer`. Owner: Abdul Mannan. A visual-quality and
+interaction pass on step 1, driven by two reference images and direct feedback
+that the old dark/desaturated look had poor contrast and lighting. Verified in a
+real browser; typecheck, lint, and the e2e suite (now 6 tests) are green.
+
+### What landed
+
+- Reworked the design tokens: lifted the whole surface ramp off pure black to a
+  graphite `#0d1117` base, raised text contrast, and added a soft radial CSS
+  "stage" gradient behind a now-transparent WebGL canvas so the brain sits in a
+  pool of light instead of on flat black.
+- Rebuilt the 3D look: a studio three-point light rig (warm key, cool fill, cool
+  back-rim) and a `MeshPhysicalMaterial` with faint clearcoat + sheen, so the
+  cortex reads as living tissue. Warm grey-pink cortex over cooler deep grey.
+- Dissection: `Isolate` (view only this region, hide the rest) and `Hide`
+  (peel a region away), both from the region panel, plus a `DissectionBar` that
+  names the current cut and offers a single "Reset model" so no one gets stranded
+  in a partial view. Visibility is a per-mesh flag applied through the existing
+  imperative store subscription — no geometry rebuild, no context teardown.
+- Anatomical view presets (`Sagittal`, `Coronal`, `Axial`, `3/4`) with a smooth
+  eased camera tween, plus a `Focus selected` modifier: off frames the whole
+  brain centred; on brings the selected region to the front (the sagittal-style
+  close-up the reference showed). Both requested spacings are now explicit modes.
+- Layer controls now split Brain (Cortex, Subcortical, Ghost cortex) from
+  Detailing (Veins, Arteries, Nerves). The detailing layers are wired but render
+  as disabled "soon" toggles until their meshes are sourced — honest about what
+  is and is not in the model.
+- Region panel redesigned toward the Neurotorium reference: region name +
+  isolate/hide actions, the sourced "Normal function" placeholder, a new
+  `Linked disorders` section, and the atlas meta rows.
+
+### Medical-honesty notes (please review)
+
+- The `Linked disorders` section and the region descriptions are the honest,
+  data-driven versions, not the rich prose in the reference screenshot. Region
+  `normal_function_description` is still `NEEDS_SOURCE` for all 100 regions, so it
+  renders as the pending placeholder. Links come only from a disorder's
+  `typical_affected_regions` (cited typical patterns), which are currently empty,
+  so every region truthfully shows "no cited pattern references this region yet".
+  The mechanism is real and lights up the moment cited data lands; nothing is
+  invented to fill the reference's look. This is per `docs/MEDICAL_ACCURACY.md`.
+- Per-case computed involvement (tumour/stroke mask ∩ region) is deliberately NOT
+  asserted from the atlas panel; it belongs to the step-2 evidence view. The
+  panel copy says so.
+
+### Detailing assets (veins/arteries/nerves) — sourcing handoff
+
+The reference vessels are from Visible Body (proprietary), so they can't be
+reused. Added `docs/ASSET_SOURCING.md` (vetted free sources: Z-Anatomy CC-BY-SA,
+BodyParts3D, NIH 3D, with the MNI-alignment caveat) and a resumable
+`backend/download_detailing_assets.sh` (`curl -C -` / shallow git clone). The
+frontend layers are ready; wiring a mesh in is a one-line change (drop the
+`pending` prop) once a glb is aligned to the atlas frame.
+
+### New files
+
+`components/atlas/ViewControls.tsx`, `components/atlas/DissectionBar.tsx`,
+`components/panel/RegionLinks.tsx`, `lib/contract/links.ts`,
+`docs/ASSET_SOURCING.md`, `backend/download_detailing_assets.sh`.
+
+### Next session (frontend)
+
+Step 2 is still the big one: disorder/case selectors, role-coloured grouped
+highlighting from `region_mappings`, and the lazy Niivue evidence viewer. The
+`Linked disorders` section gives step 2 a natural entry point from a region.
+
+## 2026-07-21 Frontend session 1: Next.js scaffold and step 1 atlas explorer
+
+Branch: `fe/atlas-explorer`. Owner: Abdul Mannan. Step 1 of the two-step UX is
+working end to end against the real wired dataset. Verified in a real browser,
+not just compiled.
+
+### What landed
+
+- Next.js 16 app in `/frontend` (App Router, TypeScript, Tailwind v4, Turbopack)
+  with React Three Fiber 9, drei 10, three 0.185, and zustand.
+- `src/lib/contract/` is the typed frontend half of the contract: `types.ts`
+  mirrors every shape in `docs/DATA_CONTRACT.md`, `load.ts` fetches and validates
+  the JSON at the boundary, `review.ts` is the single choke point for the
+  medical-honesty rules.
+- Step 1 atlas explorer: both atlas glbs load, all 100 mesh nodes join to
+  `regions.json`, regions are clickable by raycast, and the detail panel shows
+  the region record.
+- Searchable region index for all 100 regions, because subcortical structures
+  cannot be reached by clicking the cortex.
+- Ghost cortex control that fades the cortical surface so subcortical structures
+  can be seen and picked through it.
+- Persistent "pending expert review" banner with a live unreviewed count, and a
+  `SourcedField` component that is the only sanctioned way to render a contract
+  text field. It renders `NEEDS_SOURCE` as a visible amber placeholder.
+- Playwright e2e smoke suite (`npm run test:e2e`, 4 tests, passing) covering the
+  mesh-to-catalog join, the banner, the placeholder rule, and the ghost toggle.
+
+### Verified, not assumed
+
+- All 68 cortical plus 32 subcortical glb node names join to `regions.json` both
+  ways, with no orphans. A mismatch logs a `[contract]` console error and fails
+  an e2e test.
+- The literal string `NEEDS_SOURCE` never reaches the screen. Asserted in e2e.
+- Clicking `Left precentral` highlights the precentral gyrus in anatomically the
+  right place, which confirms the mesh, the catalog, and the coordinate
+  transform all agree.
+
+### Decisions taken, please review
+
+1. **Coordinate transform.** Both glbs are in raw MNI (x right, y anterior,
+   z superior) with no baked node transform. The atlas is rotated -90 degrees
+   about X to reach three.js y-up. Both layers share one centering offset
+   (the cortical bounding box centre, MNI -0.45, -14.85, 0.7). Centering them
+   independently would silently pull the subcortical structures out of register
+   with the cortex, so this must stay a single shared transform.
+2. **Client-side data loading.** `regions.json` is fetched in the browser rather
+   than server-rendered, so the app stays a pure static-asset consumer with no
+   runtime backend, matching `docs/ARCHITECTURE.md`.
+3. **Playwright added as a dev dependency.** It is the E2E framework the repo
+   standards already name, and it is the only way to verify WebGL output. In CI
+   it needs Chromium on SwiftShader, which is slow, hence the generous timeouts
+   in `playwright.config.ts`.
+
+### Contract gaps found (Tabeen, please confirm)
+
+- **`waveform.json` shape is undocumented.** `docs/DATA_CONTRACT.md` names the
+  file path but never specifies its contents. The emitted file has
+  `sampling_rate_hz`, `window`, `onset_s`, `duration_s`, `units`,
+  `involved_channels`, and `channels[{name, values}]`. It is typed in
+  `frontend/src/lib/contract/types.ts` from the real file and carries a
+  `TODO(contract)` marker. This needs a `contract/*` PR to become an agreed
+  shape rather than an observed one, before the eeg renderer is built.
+- **Glioma has no `region_mappings`.** Step 2 for the tumor case will highlight
+  zero regions until the overlap pipeline lands. The frontend will show an
+  explicit "involvement not yet computed" state rather than an empty brain that
+  reads as "no regions affected". Flagging so the demo narrative accounts for it.
+
+### Note on the design skill
+
+Root `CLAUDE.md` requires the `frontend-design` skill for UI work. That exact
+skill is not installed in this environment. `ecc:frontend-design-direction` was
+used instead and the direction is recorded in the token block at the top of
+`src/app/globals.css`. Worth installing the canonical skill from
+`anthropics/skills` so both developers work from the same guidance.
+
+### Next session (frontend)
+
+Step 2: disorder and case selectors from `disorders.json`, role-coloured
+grouped highlighting driven by `region_mappings`, and the lazy-loaded Niivue
+evidence viewer starting with `lesion-overlay`. The one-WebGL-context-at-a-time
+rule is already set up for this, since the R3F canvas is dynamically imported
+and can be unmounted when Niivue mounts.
+
 ## 2026-07-20 — Data contract wired to real data (first PR)
 
 Branch: `data/wire-contract-fixtures`. Turns the contract spec into a live,
