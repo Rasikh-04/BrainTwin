@@ -29,13 +29,35 @@ const AtlasCanvas = dynamic(
   { ssr: false, loading: () => <AtlasSkeleton /> },
 );
 
+// Step 2 is code-split and client-only: it pulls in Niivue, which must never
+// enter the atlas chunk or the server bundle. It mounts only when the user
+// enters evidence mode, by which point the atlas canvas is unmounted.
+const EvidenceExplorer = dynamic(
+  () =>
+    import("@/components/evidence/EvidenceExplorer").then(
+      (m) => m.EvidenceExplorer,
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex min-h-0 flex-1 items-center justify-center">
+        <p className="ident text-ink-faint">Opening evidence viewer…</p>
+      </div>
+    ),
+  },
+);
+
 export function AtlasExplorer() {
   const regions = useAtlasStore((s) => s.regions);
+  const disorders = useAtlasStore((s) => s.disorders);
   const setRegions = useAtlasStore((s) => s.setRegions);
   const setDisorders = useAtlasStore((s) => s.setDisorders);
   const loadError = useAtlasStore((s) => s.loadError);
   const setLoadError = useAtlasStore((s) => s.setLoadError);
   const setTheme = useAtlasStore((s) => s.setTheme);
+  const mode = useAtlasStore((s) => s.mode);
+  const enterEvidence = useAtlasStore((s) => s.enterEvidence);
+  const exitEvidence = useAtlasStore((s) => s.exitEvidence);
 
   const [isLoading, setIsLoading] = useState(true);
   // Small-screen access to the rails the layout undocks (index < lg, detail
@@ -92,6 +114,8 @@ export function AtlasExplorer() {
     (r) => r.review_status !== "reviewed",
   ).length;
 
+  const hasEvidence = disorders.some((d) => d.case_ids.length > 0);
+
   if (loadError) {
     return (
       <main className="flex h-dvh flex-col items-center justify-center gap-3 px-6 text-center">
@@ -111,11 +135,19 @@ export function AtlasExplorer() {
     <main className="flex h-dvh flex-col bg-void">
       <TopBar
         pendingCount={pendingCount}
+        mode={mode}
+        hasEvidence={hasEvidence}
         onOpenIndex={() => setIndexOpen(true)}
         onOpenDetail={() => setDetailOpen(true)}
+        onEnterEvidence={() => enterEvidence()}
+        onExitEvidence={exitEvidence}
       />
       <ReviewBanner pendingCount={pendingCount} />
 
+      {mode === "evidence" ? (
+        <EvidenceExplorer />
+      ) : (
+        <>
       <div className="flex min-h-0 flex-1">
         <aside
           aria-label="Region index"
@@ -178,6 +210,8 @@ export function AtlasExplorer() {
       >
         <RegionPanel />
       </Drawer>
+        </>
+      )}
     </main>
   );
 }

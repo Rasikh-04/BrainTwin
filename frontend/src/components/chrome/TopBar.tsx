@@ -1,14 +1,24 @@
 "use client";
 
+import type { ExplorerMode } from "@/store/useAtlasStore";
+
 import { ThemeToggle } from "./ThemeToggle";
 
 interface TopBarProps {
   /** Count of records not yet neurologist-reviewed, for the status pip. */
   pendingCount: number;
+  /** Which step is on screen — switches the app-bar between the two modes. */
+  mode: ExplorerMode;
+  /** True when at least one disorder has a wired demo case (step 2 is reachable). */
+  hasEvidence: boolean;
   /** Open the region index drawer (small screens, where it is undocked). */
   onOpenIndex: () => void;
   /** Open the region detail drawer (small screens, where it is undocked). */
   onOpenDetail: () => void;
+  /** Enter step 2, the evidence viewer. */
+  onEnterEvidence: () => void;
+  /** Return to step 1, the atlas. */
+  onExitEvidence: () => void;
 }
 
 /** A small anatomical mark — a stylised sagittal hemisphere with the medial
@@ -40,7 +50,17 @@ function BrainMark() {
  * dock. The stage stays full-bleed below it; on-stage tools (layers, views)
  * still float over the canvas.
  */
-export function TopBar({ pendingCount, onOpenIndex, onOpenDetail }: TopBarProps) {
+export function TopBar({
+  pendingCount,
+  mode,
+  hasEvidence,
+  onOpenIndex,
+  onOpenDetail,
+  onEnterEvidence,
+  onExitEvidence,
+}: TopBarProps) {
+  const isEvidence = mode === "evidence";
+
   return (
     <header className="flex h-11 shrink-0 items-center gap-3 border-b border-line bg-surface-1 px-3">
       <div className="flex items-center gap-2 text-select">
@@ -51,7 +71,11 @@ export function TopBar({ pendingCount, onOpenIndex, onOpenDetail }: TopBarProps)
       </div>
 
       <span aria-hidden className="hidden h-3.5 w-px bg-line-strong sm:block" />
-      <p className="ident hidden sm:block">Atlas explorer &middot; normal brain</p>
+      <p className="ident hidden sm:block">
+        {isEvidence
+          ? "Evidence viewer · de-identified case"
+          : "Atlas explorer · normal brain"}
+      </p>
 
       <div className="ml-auto flex items-center gap-1">
         {pendingCount > 0 && (
@@ -64,20 +88,41 @@ export function TopBar({ pendingCount, onOpenIndex, onOpenDetail }: TopBarProps)
           </span>
         )}
 
-        <button
-          type="button"
-          onClick={onOpenIndex}
-          className="rounded-md px-2.5 py-1 text-[11.5px] text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink lg:hidden"
-        >
-          Regions
-        </button>
-        <button
-          type="button"
-          onClick={onOpenDetail}
-          className="rounded-md px-2.5 py-1 text-[11.5px] text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink md:hidden"
-        >
-          Detail
-        </button>
+        {isEvidence ? (
+          <button
+            type="button"
+            onClick={onExitEvidence}
+            className="rounded-md border border-line px-2.5 py-1 text-[11.5px] text-ink-muted transition-colors hover:border-line-strong hover:text-ink"
+          >
+            &#8592; Atlas
+          </button>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={onOpenIndex}
+              className="rounded-md px-2.5 py-1 text-[11.5px] text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink lg:hidden"
+            >
+              Regions
+            </button>
+            <button
+              type="button"
+              onClick={onOpenDetail}
+              className="rounded-md px-2.5 py-1 text-[11.5px] text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink md:hidden"
+            >
+              Detail
+            </button>
+            {hasEvidence && (
+              <button
+                type="button"
+                onClick={onEnterEvidence}
+                className="rounded-md border border-select/40 bg-select/10 px-2.5 py-1 text-[11.5px] text-select transition-colors hover:bg-select/20"
+              >
+                Evidence &#8594;
+              </button>
+            )}
+          </>
+        )}
 
         <span aria-hidden className="mx-0.5 h-4 w-px bg-line" />
         <ThemeToggle />

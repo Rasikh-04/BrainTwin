@@ -5,6 +5,55 @@ landed, what is deferred and who owns it, and the risks to keep in view. It is
 not a spec (the specs are `docs/DATA_CONTRACT.md` and `docs/MEDICAL_ACCURACY.md`);
 it is the shared state of the build.
 
+## 2026-07-22 Frontend session 4: step-2 evidence viewer (Niivue + EEG)
+
+Branch: `fe/atlas-visual-fidelity`. Owner: Abdul Mannan. Built step 2, the
+evidence viewer, so the two-step UX is now end to end: explore the normal brain,
+then switch into a disorder's de-identified case and inspect the evidence behind
+it. Typecheck, lint, and the e2e suite (now 11 tests, +3 for step 2) are green.
+
+### What landed
+
+- Mode switch, one WebGL context at a time. The store gained an
+  `atlas` / `evidence` mode; the atlas R3F canvas unmounts before the evidence
+  view mounts, so the two contexts never coexist. The whole evidence subtree
+  (which pulls in Niivue) is `next/dynamic` + `ssr:false`, keeping Niivue out of
+  the atlas chunk and the server bundle. Entered via an `Evidence` app-bar button
+  (shown only when a disorder has a wired case), left via `Atlas`.
+- Renderer chosen from data, not disorder. `EvidenceView` switches on
+  `evidence.renderer` (`lesion-overlay` / `atrophy-pair` / `eeg`) with an
+  exhaustive `never` check — adding a disorder adds data, never a branch.
+- `lesion-overlay` (tumour, stroke): Niivue multiplanar, grayscale base with the
+  mask overlaid; the mask legend is the case's `mask_labels`, verbatim, with no
+  invented value→colour mapping. `NiivueMount` owns the sole second GL context
+  and releases it on unmount (this Niivue build has no `destroy`).
+- `eeg` (epilepsy): the precomputed spectrogram PNG plus the raw scalp traces
+  drawn from `waveform.json` on a 2D canvas (no client-side signal processing).
+  Framed on screen as scalp-level and approximate; nothing is drawn on the brain
+  as a seizure focus.
+- `atrophy-pair` (Alzheimer's): baseline beside follow-up, each its own Niivue
+  surface. Renderer is wired; no case data exists yet, so it is unreached.
+- Traceability, honestly typed. `RegionMappings` styles computed involvement
+  (this patient's mask ∩ atlas, with an overlap metric) differently from cited
+  typical / scalp-level patterns. An empty `region_mappings` (the tumour case
+  today) renders "Region involvement not yet computed" — never no-involvement,
+  never a guessed region. Report summaries pass through `SourcedField`, so an
+  unsourced summary shows the pending placeholder, never the raw marker.
+- Study picker. `DisorderList` lists every disorder; only those with a wired demo
+  case are selectable, the rest shown disabled and labelled, so the demo is
+  honest about which evidence actually exists. Cases are fetched on demand.
+
+### Backend handoff (Tabeen)
+
+- **Tumor `region_mappings`.** The step-2 tumour view is complete but shows
+  "involvement not yet computed" because `brats-001.region_mappings` is empty.
+  Populating it is the backend BraTS-mask ∩ DK-atlas overlap pipeline; the shape
+  is `RegionMapping[]` with `overlap_metric` set (that is what renders as the
+  `computed` claim type). No frontend change needed when it lands.
+- **Stroke / Alzheimer's cases.** Both renderers exist (`lesion-overlay`,
+  `atrophy-pair`). Adding a case JSON + assets for either makes it appear in the
+  study list automatically — no code branch.
+
 ## 2026-07-22 Frontend session 3: tissue realism, themes, instrument layout
 
 Branch: `fe/atlas-visual-fidelity`. Owner: Abdul Mannan. A visual-fidelity and

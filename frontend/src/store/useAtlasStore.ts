@@ -29,6 +29,14 @@ export const DETAIL_LAYERS: LayerKey[] = ["veins", "arteries", "nerves"];
  */
 export type ViewPreset = "sagittal" | "coronal" | "axial" | "anterolateral";
 
+/**
+ * The two-step UX. `atlas` is the R3F normal-brain explorer (step 1); `evidence`
+ * is the Niivue/EEG case viewer (step 2). They never render together: switching
+ * to `evidence` unmounts the atlas canvas so only one WebGL context is ever live
+ * (frontend/CLAUDE.md).
+ */
+export type ExplorerMode = "atlas" | "evidence";
+
 interface AtlasState {
   regions: Region[];
   regionsById: Map<string, Region>;
@@ -78,6 +86,15 @@ interface AtlasState {
    *  already set the DOM attribute; AtlasExplorer syncs the store to it). */
   theme: Theme;
 
+  /** Which step is on screen. See ExplorerMode. */
+  mode: ExplorerMode;
+  /**
+   * Case selected for the step-2 evidence view. Null in atlas mode and until a
+   * study is picked. The case JSON itself is fetched on demand by the evidence
+   * view, never eagerly — this holds only the id.
+   */
+  activeCaseId: string | null;
+
   setRegions: (regions: Region[]) => void;
   setDisorders: (disorders: Disorder[]) => void;
   setLoadError: (message: string | null) => void;
@@ -96,6 +113,13 @@ interface AtlasState {
   toggleFocusSelected: () => void;
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
+
+  /** Enter step 2. Optionally jump straight to a specific case. */
+  enterEvidence: (caseId?: string) => void;
+  /** Return to step 1 and drop the active case. */
+  exitEvidence: () => void;
+  /** Change which case the evidence view is showing. */
+  setActiveCase: (caseId: string | null) => void;
 }
 
 export const useAtlasStore = create<AtlasState>((set) => ({
@@ -122,6 +146,9 @@ export const useAtlasStore = create<AtlasState>((set) => ({
   viewNonce: 0,
   focusSelected: false,
   theme: DEFAULT_THEME,
+
+  mode: "atlas",
+  activeCaseId: null,
 
   setRegions: (regions) =>
     set({ regions, regionsById: indexRegions(regions), loadError: null }),
@@ -187,6 +214,16 @@ export const useAtlasStore = create<AtlasState>((set) => ({
       applyTheme(next);
       return { theme: next };
     }),
+
+  enterEvidence: (caseId) =>
+    set((state) => ({
+      mode: "evidence",
+      activeCaseId: caseId ?? state.activeCaseId,
+    })),
+
+  exitEvidence: () => set({ mode: "atlas", activeCaseId: null }),
+
+  setActiveCase: (activeCaseId) => set({ activeCaseId }),
 }));
 
 /** Convenience selector — the currently selected Region record, if any. */
