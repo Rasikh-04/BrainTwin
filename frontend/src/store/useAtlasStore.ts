@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import type { Disorder, Region } from "@/lib/contract/types";
 import { indexRegions } from "@/lib/contract/load";
+import { applyTheme, DEFAULT_THEME, type Theme } from "@/lib/theme";
 
 /**
  * Renderable layers of the model. `cortical` and `subcortical` are the real
@@ -72,6 +73,11 @@ interface AtlasState {
   /** When true, frame the selected region instead of centring the whole brain. */
   focusSelected: boolean;
 
+  /** Active surface theme. Initialised to the default for a stable SSR/first
+   *  render, then reconciled from localStorage on mount (the pre-paint script
+   *  already set the DOM attribute; AtlasExplorer syncs the store to it). */
+  theme: Theme;
+
   setRegions: (regions: Region[]) => void;
   setDisorders: (disorders: Disorder[]) => void;
   setLoadError: (message: string | null) => void;
@@ -88,6 +94,8 @@ interface AtlasState {
 
   applyView: (preset: ViewPreset) => void;
   toggleFocusSelected: () => void;
+  setTheme: (theme: Theme) => void;
+  toggleTheme: () => void;
 }
 
 export const useAtlasStore = create<AtlasState>((set) => ({
@@ -113,6 +121,7 @@ export const useAtlasStore = create<AtlasState>((set) => ({
   viewPreset: "anterolateral",
   viewNonce: 0,
   focusSelected: false,
+  theme: DEFAULT_THEME,
 
   setRegions: (regions) =>
     set({ regions, regionsById: indexRegions(regions), loadError: null }),
@@ -166,6 +175,18 @@ export const useAtlasStore = create<AtlasState>((set) => ({
 
   toggleFocusSelected: () =>
     set((state) => ({ focusSelected: !state.focusSelected })),
+
+  setTheme: (theme) => {
+    applyTheme(theme);
+    set({ theme });
+  },
+
+  toggleTheme: () =>
+    set((state) => {
+      const next: Theme = state.theme === "light" ? "dark" : "light";
+      applyTheme(next);
+      return { theme: next };
+    }),
 }));
 
 /** Convenience selector — the currently selected Region record, if any. */

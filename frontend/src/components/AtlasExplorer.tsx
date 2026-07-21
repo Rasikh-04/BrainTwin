@@ -9,9 +9,11 @@ import { HoverReadout } from "@/components/atlas/HoverReadout";
 import { LayerControls } from "@/components/atlas/LayerControls";
 import { ViewControls } from "@/components/atlas/ViewControls";
 import { ReviewBanner } from "@/components/chrome/ReviewBanner";
+import { ThemeToggle } from "@/components/chrome/ThemeToggle";
 import { RegionIndex } from "@/components/panel/RegionIndex";
 import { RegionPanel } from "@/components/panel/RegionPanel";
 import { loadDisorders, loadRegions } from "@/lib/contract/load";
+import { getStoredTheme } from "@/lib/theme";
 import { useAtlasStore } from "@/store/useAtlasStore";
 
 /**
@@ -32,8 +34,18 @@ export function AtlasExplorer() {
   const setDisorders = useAtlasStore((s) => s.setDisorders);
   const loadError = useAtlasStore((s) => s.loadError);
   const setLoadError = useAtlasStore((s) => s.setLoadError);
+  const setTheme = useAtlasStore((s) => s.setTheme);
 
   const [isLoading, setIsLoading] = useState(true);
+
+  // Reconcile the store to the persisted theme after hydration. localStorage is
+  // the source of truth: the pre-paint head script already set <html data-theme>
+  // from it, but React hydration can drop that attribute (it is not a
+  // React-controlled prop), so we re-apply it here and align the store in one
+  // step. Running post-mount also avoids an SSR/client markup mismatch.
+  useEffect(() => {
+    setTheme(getStoredTheme());
+  }, [setTheme]);
 
   useEffect(() => {
     let cancelled = false;
@@ -107,11 +119,14 @@ export function AtlasExplorer() {
           {isLoading ? <AtlasSkeleton /> : <AtlasCanvas />}
 
           <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-3">
-            <header className="panel pointer-events-auto px-3 py-2">
-              <h1 className="text-[13px] font-medium leading-none text-ink">
-                BrainTwin
-              </h1>
-              <p className="ident mt-1">Atlas explorer &middot; normal brain</p>
+            <header className="panel pointer-events-auto flex items-center gap-3 px-3 py-2">
+              <div>
+                <h1 className="text-[13px] font-medium leading-none text-ink">
+                  BrainTwin
+                </h1>
+                <p className="ident mt-1">Atlas explorer &middot; normal brain</p>
+              </div>
+              <ThemeToggle />
             </header>
             <LayerControls />
           </div>
