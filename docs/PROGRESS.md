@@ -5,7 +5,60 @@ landed, what is deferred and who owns it, and the risks to keep in view. It is
 not a spec (the specs are `docs/DATA_CONTRACT.md` and `docs/MEDICAL_ACCURACY.md`);
 it is the shared state of the build.
 
-## 2026-07-21 Frontend session 2: visual overhaul, dissection, anatomical views
+## 2026-07-22 Frontend session 3: tissue realism, themes, instrument layout
+
+Branch: `fe/atlas-visual-fidelity`. Owner: Abdul Mannan. A visual-fidelity and
+usability pass on step 1, driven by session-2 feedback: the cortex was not rich
+enough, the brain read as a hollow shell, dissected regions blocked picking, and
+the layout looked generic with no light theme and no small-screen handling.
+Verified in a real browser at desktop and phone widths, both themes; typecheck,
+lint, and the e2e suite (now 8 tests) are green.
+
+### What landed
+
+- Richer tissue and a solid brain. Cortex base is a warmer rose (`#d9948c`) with
+  higher roughness plus faint clearcoat and sheen; subcortical is a cooler slate.
+  Meshes now render `THREE.DoubleSide`, so the surface no longer reads as an
+  empty shell when the camera sees an inner face.
+- Pick-through on removed surfaces. Ghosted cortex and dissected/removed meshes
+  swap their `raycast` to a no-op, so a click passes through to the structure
+  behind them instead of being caught by an invisible surface. Still a material
+  and per-mesh-flag change only, no geometry rebuild.
+- Region-colour mode. A new toggle gives every region its own deterministic hue
+  (`lib/atlas/regionColor.ts`, FNV-1a hash to HSL) for easy differentiation. It
+  is a purely visual aid: it asserts nothing clinical and deliberately avoids the
+  four reserved involvement hues (cyan select, rose primary, violet secondary,
+  amber pending).
+- Two-theme surface. Clinical light is now the default imaging-workstation look;
+  clinical dark is the alternate reading-room surface. Themes are token overrides
+  on `<html data-theme>`; a no-FOUC head script sets it before paint from
+  localStorage, and the store reconciles to localStorage on mount (React
+  hydration can drop the script-set attribute). Theme toggle lives in the app-bar
+  and the 3D light rig is theme-aware.
+- De-generic instrument layout. A slim top app-bar (brain mark, wordmark,
+  `Atlas explorer` ident, pending-review chip, theme toggle) replaces the old
+  floating identity card; on-stage tools (layers, views) still float over the
+  canvas. The review banner is slimmer but still persistent (`role="status"`,
+  "Pending expert review.").
+- Responsive. Docked rails stay for wide screens (index hidden below `lg`, detail
+  below `md`). Below those widths the app-bar shows `Regions` / `Detail` triggers
+  that open the same content as slide-over drawers (`role="dialog"`, no landmark
+  collision with the docked rails). On-stage tool clusters stack and scroll
+  instead of overlapping on narrow screens.
+
+### Backend handoff (Tabeen, for the first backend session)
+
+- **Detailing meshes (veins, arteries, nerves).** The frontend is already wired:
+  the three toggles exist but render disabled ("soon") until an aligned glb is
+  present. Producing them is a backend task: export from a source such as
+  Z-Anatomy / BodyParts3D `.blend`, align into the same MNI space as the atlas
+  glbs, and drop the result into `frontend/public/assets/detailing/`. When those
+  land, the frontend removes the `pending` flag on those layers; no new wiring.
+- **Tumor `region_mappings`** stays as previously logged (BraTS mask ∩ DK atlas
+  overlap pipeline). Until it is computed the step-2 tumor view will show
+  "involvement not yet computed", never a guessed region.
+
+
 
 Branch: `fe/atlas-explorer`. Owner: Abdul Mannan. A visual-quality and
 interaction pass on step 1, driven by two reference images and direct feedback
