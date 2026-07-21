@@ -11,6 +11,7 @@ import {
   useAtlasStore,
   type ViewPreset,
 } from "@/store/useAtlasStore";
+import { recordPointerDown, wasDragged } from "@/lib/atlas/pointerDrag";
 
 /**
  * The step-1 atlas explorer canvas.
@@ -62,6 +63,33 @@ function worldFromMni(p: [number, number, number]): THREE.Vector3 {
   return new THREE.Vector3(p[0] - cx, p[2] - cz, -(p[1] - cy));
 }
 
+/** A region close enough to the midline that it has no reliable outward face. */
+const CENTRAL_REGION_RADIUS = 20;
+
+/**
+ * Direction (brain centre -> camera) that looks straight at a region from
+ * outside the brain, along the line from the centre through the region
+ * itself. A fixed preset direction (e.g. sagittal, always from the left)
+ * has no relation to where the selected region actually sits, so focusing
+ * on a right-hemisphere region while "sagittal" is active would have to
+ * look through the entire left hemisphere to reach it — blocked instead of
+ * framed. Aiming outward from the region's own position guarantees a clear,
+ * front-on view of whatever was picked, regardless of the active preset.
+ */
+function outwardDirection(
+  target: THREE.Vector3,
+  fallback: THREE.Vector3,
+): THREE.Vector3 {
+  if (target.length() < CENTRAL_REGION_RADIUS) return fallback.clone();
+
+  const dir = target.clone();
+  // Nudge the elevation up a little so a region that sits near the vertical
+  // axis doesn't level the camera into a pure top-down look, which flips
+  // the up vector and spins the view.
+  dir.y += Math.max(dir.length() * 0.06, 4);
+  return dir.normalize();
+}
+
 const TWEEN_MS = 620;
 
 /**
@@ -104,10 +132,11 @@ function ViewRig({
         : new THREE.Vector3(0, 0, 0);
     const distance = focusing ? FOCUS_DISTANCE : WHOLE_BRAIN_DISTANCE;
 
-    const toPos = VIEW_DIRECTIONS[viewPreset]
-      .clone()
-      .multiplyScalar(distance)
-      .add(target);
+    const direction = focusing
+      ? outwardDirection(target, VIEW_DIRECTIONS[viewPreset])
+      : VIEW_DIRECTIONS[viewPreset];
+
+    const toPos = direction.clone().multiplyScalar(distance).add(target);
 
     const t = tween.current;
     t.fromPos.copy(camera.position);
@@ -162,8 +191,13 @@ export function AtlasCanvas() {
           -WHOLE_BRAIN_DISTANCE * 0.62,
         ],
       }}
-      // Clicking empty space clears the selection.
-      onPointerMissed={() => selectRegion(null)}
+      // Clicking empty space clears the selection — but not when the
+      // pointer only landed there because an orbit drag ended over it.
+      onPointerDown={(event) => recordPointerDown(event.clientX, event.clientY)}
+      onPointerMissed={(event) => {
+        if (wasDragged(event.clientX, event.clientY)) return;
+        selectRegion(null);
+      }}
     >
       {/*
         Studio three-point rig rather than an HDR environment: an environment
