@@ -79,6 +79,8 @@ function LayerToggle({
 export function LayerControls() {
   const ghostCortex = useAtlasStore((s) => s.ghostCortex);
   const toggleGhostCortex = useAtlasStore((s) => s.toggleGhostCortex);
+  const regionColorMode = useAtlasStore((s) => s.regionColorMode);
+  const toggleRegionColorMode = useAtlasStore((s) => s.toggleRegionColorMode);
 
   return (
     <div className="panel pointer-events-auto flex flex-col gap-1 p-1.5">
@@ -101,6 +103,28 @@ export function LayerControls() {
           }`}
         >
           Ghost cortex
+        </button>
+        <button
+          type="button"
+          onClick={toggleRegionColorMode}
+          aria-pressed={regionColorMode}
+          title="Give every region its own colour for easy differentiation (visual aid only, no clinical meaning)"
+          className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-[11.5px] transition-colors ${
+            regionColorMode
+              ? "bg-select/15 text-select"
+              : "text-ink-faint hover:bg-surface-2 hover:text-ink-muted"
+          }`}
+        >
+          <span
+            aria-hidden
+            className="h-2 w-2 rounded-full"
+            style={{
+              background: regionColorMode
+                ? "conic-gradient(from 0deg, #f87171, #fbbf24, #34d399, #38bdf8, #a78bfa, #f87171)"
+                : "var(--color-line-strong)",
+            }}
+          />
+          Region colours
         </button>
       </div>
 

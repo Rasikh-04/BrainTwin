@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import type { Disorder, Region } from "@/lib/contract/types";
 import { indexRegions } from "@/lib/contract/load";
+import { applyTheme, DEFAULT_THEME, type Theme } from "@/lib/theme";
 
 /**
  * Renderable layers of the model. `cortical` and `subcortical` are the real
@@ -28,6 +29,14 @@ export const DETAIL_LAYERS: LayerKey[] = ["veins", "arteries", "nerves"];
  */
 export type ViewPreset = "sagittal" | "coronal" | "axial" | "anterolateral";
 
+/**
+ * The two-step UX. `atlas` is the R3F normal-brain explorer (step 1); `evidence`
+ * is the Niivue/EEG case viewer (step 2). They never render together: switching
+ * to `evidence` unmounts the atlas canvas so only one WebGL context is ever live
+ * (frontend/CLAUDE.md).
+ */
+export type ExplorerMode = "atlas" | "evidence";
+
 interface AtlasState {
   regions: Region[];
   regionsById: Map<string, Region>;
@@ -50,6 +59,12 @@ interface AtlasState {
    * it. Implemented as a material opacity change, never a geometry change.
    */
   ghostCortex: boolean;
+  /**
+   * Recolour every region with its own distinct hue for easy differentiation.
+   * A purely visual aid (see lib/atlas/regionColor.ts); it asserts nothing
+   * clinical and is separate from the reserved involvement hues used in step 2.
+   */
+  regionColorMode: boolean;
 
   /**
    * Dissection. `isolatedRegionId` shows only that one region and hides
@@ -66,6 +81,20 @@ interface AtlasState {
   /** When true, frame the selected region instead of centring the whole brain. */
   focusSelected: boolean;
 
+  /** Active surface theme. Initialised to the default for a stable SSR/first
+   *  render, then reconciled from localStorage on mount (the pre-paint script
+   *  already set the DOM attribute; AtlasExplorer syncs the store to it). */
+  theme: Theme;
+
+  /** Which step is on screen. See ExplorerMode. */
+  mode: ExplorerMode;
+  /**
+   * Case selected for the step-2 evidence view. Null in atlas mode and until a
+   * study is picked. The case JSON itself is fetched on demand by the evidence
+   * view, never eagerly — this holds only the id.
+   */
+  activeCaseId: string | null;
+
   setRegions: (regions: Region[]) => void;
   setDisorders: (disorders: Disorder[]) => void;
   setLoadError: (message: string | null) => void;
@@ -73,6 +102,7 @@ interface AtlasState {
   hoverRegion: (regionId: string | null) => void;
   toggleLayer: (layer: LayerKey) => void;
   toggleGhostCortex: () => void;
+  toggleRegionColorMode: () => void;
 
   isolateRegion: (regionId: string | null) => void;
   hideRegion: (regionId: string) => void;
@@ -81,6 +111,15 @@ interface AtlasState {
 
   applyView: (preset: ViewPreset) => void;
   toggleFocusSelected: () => void;
+  setTheme: (theme: Theme) => void;
+  toggleTheme: () => void;
+
+  /** Enter step 2. Optionally jump straight to a specific case. */
+  enterEvidence: (caseId?: string) => void;
+  /** Return to step 1 and drop the active case. */
+  exitEvidence: () => void;
+  /** Change which case the evidence view is showing. */
+  setActiveCase: (caseId: string | null) => void;
 }
 
 export const useAtlasStore = create<AtlasState>((set) => ({
@@ -98,6 +137,7 @@ export const useAtlasStore = create<AtlasState>((set) => ({
     nerves: false,
   },
   ghostCortex: false,
+  regionColorMode: false,
 
   isolatedRegionId: null,
   hiddenRegionIds: new Set(),
@@ -105,6 +145,10 @@ export const useAtlasStore = create<AtlasState>((set) => ({
   viewPreset: "anterolateral",
   viewNonce: 0,
   focusSelected: false,
+  theme: DEFAULT_THEME,
+
+  mode: "atlas",
+  activeCaseId: null,
 
   setRegions: (regions) =>
     set({ regions, regionsById: indexRegions(regions), loadError: null }),
@@ -131,6 +175,9 @@ export const useAtlasStore = create<AtlasState>((set) => ({
   toggleGhostCortex: () =>
     set((state) => ({ ghostCortex: !state.ghostCortex })),
 
+  toggleRegionColorMode: () =>
+    set((state) => ({ regionColorMode: !state.regionColorMode })),
+
   isolateRegion: (regionId) => set({ isolatedRegionId: regionId }),
 
   hideRegion: (regionId) =>
@@ -155,6 +202,28 @@ export const useAtlasStore = create<AtlasState>((set) => ({
 
   toggleFocusSelected: () =>
     set((state) => ({ focusSelected: !state.focusSelected })),
+
+  setTheme: (theme) => {
+    applyTheme(theme);
+    set({ theme });
+  },
+
+  toggleTheme: () =>
+    set((state) => {
+      const next: Theme = state.theme === "light" ? "dark" : "light";
+      applyTheme(next);
+      return { theme: next };
+    }),
+
+  enterEvidence: (caseId) =>
+    set((state) => ({
+      mode: "evidence",
+      activeCaseId: caseId ?? state.activeCaseId,
+    })),
+
+  exitEvidence: () => set({ mode: "atlas", activeCaseId: null }),
+
+  setActiveCase: (activeCaseId) => set({ activeCaseId }),
 }));
 
 /** Convenience selector — the currently selected Region record, if any. */

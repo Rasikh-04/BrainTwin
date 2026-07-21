@@ -4,23 +4,67 @@
  * BrainTwin design tokens.
  *
  * Direction: a clinical instrument, not a landing page. The brain is the
- * interface; chrome is thin, translucent, and sits over a full-bleed canvas so
- * the anatomy is never boxed into a card. Dark by default because a bright UI
- * washes out the shaded 3D surface and the greyscale scans in step 2.
+ * interface; chrome is thin and sits over an illuminated stage so the anatomy
+ * is never boxed into a card.
+ *
+ * Two themes. "Clinical light" is the default — a bright imaging-workstation
+ * surface that reads as a medical tool. "Clinical dark" is the alternate, which
+ * suits a dim reading room and lets the shaded 3D surface and greyscale scans
+ * sit against depth. The default (light) values live in @theme; the dark theme
+ * overrides the same custom properties under [data-theme="dark"], so every
+ * `bg-*` / `text-*` utility flips by swapping one attribute on <html>.
  *
  * The palette is deliberately multi-hue and semantically assigned. Colour here
  * carries medical meaning, so it is never chosen decoratively:
  *   cyan   = user selection (interaction, no clinical claim)
- *   ember  = primary involvement    (role: "primary")
+ *   rose   = primary involvement    (role: "primary")
  *   violet = secondary involvement  (role: "secondary")
  *   amber  = pending expert review / unsourced content
  * Nothing else may use these four hues.
  */
 
 @theme {
-  /* Surfaces: cool graphite, stepped so panels read as layers over the canvas.
-     Lifted off pure black so the shaded 3D surface has something to sit against
-     and never dissolves into the background. */
+  /* --- Clinical light (default) --- */
+  /* Surfaces: cool clinical greys, stepped so panels read as layers over the
+     stage. Panels are near-white; the page sits a touch darker so they lift. */
+  --color-void: #e6ebf1;
+  --color-surface-0: #eef2f7;
+  --color-surface-1: #ffffff;
+  --color-surface-2: #eef2f8;
+  --color-line: #d5dde7;
+  --color-line-strong: #bac5d3;
+
+  /* Text — dark slate on the light surfaces */
+  --color-ink: #16202e;
+  --color-ink-muted: #47546a;
+  --color-ink-faint: #72808f;
+
+  /* Semantic accents, tuned for contrast on a light surface */
+  --color-select: #0891b2;
+  --color-select-dim: #67e8f9;
+  --color-primary-role: #e11d48;
+  --color-secondary-role: #7c3aed;
+  --color-pending: #b45309;
+
+  /* Evidence strength: computed involvement vs cited typical pattern */
+  --color-computed: #047857;
+  --color-cited: #0369a1;
+
+  /* Stage: an illuminated light-box the brain sits inside. */
+  --stage-0: #ffffff;
+  --stage-1: #f2f6fb;
+  --stage-2: #e2e9f2;
+  --stage-3: #d2dbe7;
+  --panel-shadow: 0 6px 22px -14px rgb(20 40 70 / 0.35);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+
+  --radius-panel: 10px;
+}
+
+/* --- Clinical dark (alternate) --- */
+:root[data-theme="dark"] {
   --color-void: #0d1117;
   --color-surface-0: #10151d;
   --color-surface-1: #161d28;
@@ -28,26 +72,24 @@
   --color-line: #2c3849;
   --color-line-strong: #3d4c63;
 
-  /* Text — raised for contrast on the graphite surfaces */
   --color-ink: #f0f4f9;
   --color-ink-muted: #b4c1d3;
   --color-ink-faint: #8494a8;
 
-  /* Semantic accents */
   --color-select: #38d6ef;
   --color-select-dim: #0e7490;
   --color-primary-role: #fb7185;
   --color-secondary-role: #a78bfa;
   --color-pending: #f5b638;
 
-  /* Evidence strength: computed involvement vs cited typical pattern */
   --color-computed: #34d399;
   --color-cited: #7dd3fc;
 
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
-
-  --radius-panel: 10px;
+  --stage-0: #1c2634;
+  --stage-1: #141b25;
+  --stage-2: #0d1117;
+  --stage-3: #090c11;
+  --panel-shadow: 0 8px 28px -14px rgb(0 0 0 / 0.6);
 }
 
 html,
@@ -78,26 +120,26 @@ body {
 }
 
 .panel {
-  background: color-mix(in oklab, var(--color-surface-1) 90%, transparent);
+  background: color-mix(in oklab, var(--color-surface-1) 88%, transparent);
   backdrop-filter: blur(14px);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-panel);
-  box-shadow: 0 8px 28px -14px rgb(0 0 0 / 0.6);
+  box-shadow: var(--panel-shadow);
 }
 
 /*
  * The 3D stage. A soft off-centre radial pool lifts the brain off the
- * background so its shaded surface has depth to sit against, instead of a flat
- * black void. The WebGL canvas renders transparent over this.
+ * background so its shaded surface has depth to sit against. The WebGL canvas
+ * renders transparent over this, in both themes.
  */
 .stage {
   background:
     radial-gradient(
       120% 120% at 42% 32%,
-      #1c2634 0%,
-      #141b25 34%,
-      #0d1117 68%,
-      #090c11 100%
+      var(--stage-0) 0%,
+      var(--stage-1) 34%,
+      var(--stage-2) 68%,
+      var(--stage-3) 100%
     );
 }
 

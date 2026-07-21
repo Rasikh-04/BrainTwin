@@ -84,6 +84,47 @@ test("ghost cortex toggles without tearing down the scene", async ({ page }) => 
   expect(errors).toEqual([]);
 });
 
+test("defaults to the clinical light theme and toggles to dark, persisting", async ({
+  page,
+}) => {
+  await openAtlas(page);
+
+  const html = page.locator("html");
+  // Light is the default clinical surface.
+  await expect(html).toHaveAttribute("data-theme", "light");
+
+  await page.getByRole("button", { name: "Switch to dark theme" }).click();
+  await expect(html).toHaveAttribute("data-theme", "dark");
+
+  // The choice survives a reload (persisted to localStorage, applied before
+  // paint by the head script — no flash of the light default).
+  await page.reload({ waitUntil: "networkidle" });
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+});
+
+test("region colours toggle recolours regions without tearing down the scene", async ({
+  page,
+}) => {
+  const errors = await openAtlas(page);
+
+  const colours = page.getByRole("button", { name: "Region colours" });
+  await expect(colours).toHaveAttribute("aria-pressed", "false");
+
+  await colours.click();
+  await expect(colours).toHaveAttribute("aria-pressed", "true");
+
+  // Colour mode is a material tint swap, so the context and picking survive it:
+  // the canvas stays up and a region is still selectable afterwards.
+  await expect(page.locator("canvas")).toBeVisible();
+  await page.getByRole("button", { name: /Left precentral/ }).first().click();
+  const panel = page.getByRole("complementary", { name: "Region detail" });
+  await expect(panel.getByText("ctx-lh-precentral")).toBeVisible();
+
+  await colours.click();
+  await expect(colours).toHaveAttribute("aria-pressed", "false");
+  expect(errors).toEqual([]);
+});
+
 test("isolating a region shows a reset path and clears the whole model", async ({
   page,
 }) => {

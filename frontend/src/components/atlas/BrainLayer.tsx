@@ -7,6 +7,7 @@ import * as THREE from "three";
 
 import { useAtlasStore, type LayerKey } from "@/store/useAtlasStore";
 import { wasDragged } from "@/lib/atlas/pointerDrag";
+import { regionColor } from "@/lib/atlas/regionColor";
 
 /**
  * Renders one atlas glb (cortical or subcortical).
@@ -38,6 +39,15 @@ const GHOST_OPACITY = 0.16;
 /** Regions peeled away by dissection fade rather than vanish, so the cut reads. */
 const DISSECT_OPACITY = 0;
 
+/**
+ * Raycast pass-through. A ghosted or peeled-away region must not intercept a
+ * click meant for the structure revealed behind it — "see through" has to mean
+ * "pick through" too. Swapping a mesh's raycast to a no-op removes it from
+ * hit-testing without touching its visibility or geometry.
+ */
+const DEFAULT_RAYCAST = THREE.Mesh.prototype.raycast;
+const NOOP_RAYCAST: THREE.Mesh["raycast"] = () => {};
+
 export function BrainLayer({ url, layer, tissueColor }: BrainLayerProps) {
   // `true` enables the Draco decoder. It is only fetched if a glb is actually
   // Draco-compressed, so this is safe now and ready for the compressed meshes.
@@ -55,9 +65,10 @@ export function BrainLayer({ url, layer, tissueColor }: BrainLayerProps) {
    * highlighting one region cannot bleed into its neighbours (glb exporters
    * commonly share a single material across all nodes).
    */
+  const baseColor = useMemo(() => new THREE.Color(tissueColor), [tissueColor]);
+
   const meshes = useMemo(() => {
     const byRegionId = new Map<string, THREE.Mesh>();
-    const base = new THREE.Color(tissueColor);
 
     scene.traverse((object) => {
       if (!(object instanceof THREE.Mesh)) return;
@@ -66,15 +77,22 @@ export function BrainLayer({ url, layer, tissueColor }: BrainLayerProps) {
       // the studio lights: matte gyral surface with a soft wet sheen in the
       // sulci, instead of the flat clay of a plain standard material. Sheen
       // adds the slight backscatter that makes a brain look soft, not carved.
+      //
+      // DoubleSide is what stops the brain reading as a hollow shell: the atlas
+      // meshes are open surfaces, so with front-face-only culling you see
+      // straight through to nothing at the brainstem opening and whenever a
+      // region is isolated. Rendering the back faces gives every cut an inner
+      // wall, so the tissue looks solid.
       const material = new THREE.MeshPhysicalMaterial({
-        color: base.clone(),
-        roughness: 0.74,
+        color: baseColor.clone(),
+        roughness: 0.6,
         metalness: 0,
-        clearcoat: 0.18,
-        clearcoatRoughness: 0.55,
-        sheen: 0.4,
-        sheenRoughness: 0.9,
-        sheenColor: new THREE.Color("#f0c9c0"),
+        clearcoat: 0.24,
+        clearcoatRoughness: 0.48,
+        sheen: 0.55,
+        sheenRoughness: 0.85,
+        sheenColor: new THREE.Color("#ffcabf"),
+        side: THREE.DoubleSide,
         flatShading: false,
       });
       object.material = material;
@@ -84,7 +102,7 @@ export function BrainLayer({ url, layer, tissueColor }: BrainLayerProps) {
     });
 
     return byRegionId;
-  }, [scene, tissueColor]);
+  }, [scene, baseColor]);
 
   /**
    * Contract check at the boundary: an unjoinable node means the mesh and the
@@ -112,6 +130,7 @@ export function BrainLayer({ url, layer, tissueColor }: BrainLayerProps) {
     hoveredRegionId: string | null;
     isolatedRegionId: string | null;
     hiddenRegionIds: Set<string>;
+    regionColorMode: boolean;
   }) => void;
   const applyState = useRef<ApplyState>(() => {});
 
@@ -121,9 +140,17 @@ export function BrainLayer({ url, layer, tissueColor }: BrainLayerProps) {
       hoveredRegionId,
       isolatedRegionId,
       hiddenRegionIds,
+      regionColorMode,
     }) => {
       for (const [regionId, mesh] of meshes) {
         const material = mesh.material as THREE.MeshPhysicalMaterial;
+
+        // Base tint: the region's own distinct hue in colour mode, otherwise
+        // the layer's shared tissue tone. Restored every pass so toggling the
+        // mode off returns the tissue colour without a geometry rebuild.
+        material.color.copy(
+          regionColorMode ? regionColor(regionId) : baseColor,
+        );
 
         // Dissection resolves first: an isolated region hides every other
         // region across every layer; a hidden region is removed outright.
@@ -133,6 +160,10 @@ export function BrainLayer({ url, layer, tissueColor }: BrainLayerProps) {
         mesh.visible = !removed;
         if (removed) {
           material.opacity = DISSECT_OPACITY;
+          // A removed region is gone from the scene; make sure it is also gone
+          // from hit-testing so it can never intercept a click for a revealed
+          // structure behind it.
+          mesh.raycast = NOOP_RAYCAST;
           continue;
         }
         const isSelected = regionId === selectedRegionId;
@@ -160,13 +191,18 @@ export function BrainLayer({ url, layer, tissueColor }: BrainLayerProps) {
         }
         material.opacity = ghosted ? GHOST_OPACITY : 1;
         material.depthWrite = !ghosted;
+
+        // Pick-through: a ghosted (see-through) cortex must let clicks reach the
+        // subcortical structures behind it. Any other visible region stays
+        // pickable.
+        mesh.raycast = ghosted ? NOOP_RAYCAST : DEFAULT_RAYCAST;
       }
     };
 
     applyState.current(useAtlasStore.getState());
 
     return useAtlasStore.subscribe((state) => applyState.current(state));
-  }, [meshes, ghostCortex, layer]);
+  }, [meshes, ghostCortex, layer, baseColor]);
 
   const handlePointerOver = (event: ThreeEvent<PointerEvent>) => {
     if (!visible) return;

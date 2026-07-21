@@ -33,9 +33,10 @@ import { recordPointerDown, wasDragged } from "@/lib/atlas/pointerDrag";
  */
 const MNI_BBOX_CENTER: [number, number, number] = [-0.45, -14.85, 0.7];
 
-/** Tissue tones. Warm grey-pink cortex over cooler grey-blue deep structures. */
-const CORTICAL_TISSUE = "#c8b0ab";
-const SUBCORTICAL_TISSUE = "#9aa6bc";
+/** Tissue tones. A richer anatomical rose cortex over cooler grey-blue deep
+ *  structures, so the surface reads as living tissue rather than pale clay. */
+const CORTICAL_TISSUE = "#d9948c";
+const SUBCORTICAL_TISSUE = "#93a1ba";
 
 const WHOLE_BRAIN_DISTANCE = 415;
 const FOCUS_DISTANCE = 185;
@@ -169,8 +170,33 @@ function ViewRig({
   return null;
 }
 
+/**
+ * The three-point rig is tuned per theme. On the light stage the brain would
+ * read as a dark object on white without more fill, so ambient and hemisphere
+ * lift and the ground bounce goes light; on the dark stage the rig stays
+ * contrasty so the silhouette reads off the deep background.
+ */
+const LIGHTING = {
+  light: {
+    hemi: { intensity: 0.85, color: "#eef4fc", ground: "#c9d2df" },
+    ambient: 0.34,
+    key: 2.0,
+    fill: 0.85,
+    back: 0.95,
+  },
+  dark: {
+    hemi: { intensity: 0.5, color: "#cdd8e8", ground: "#12161d" },
+    ambient: 0.14,
+    key: 2.1,
+    fill: 0.7,
+    back: 1.25,
+  },
+} as const;
+
 export function AtlasCanvas() {
   const selectRegion = useAtlasStore((s) => s.selectRegion);
+  const theme = useAtlasStore((s) => s.theme);
+  const light = LIGHTING[theme];
   const controls = useRef<OrbitControlsImpl | null>(null);
 
   return (
@@ -206,24 +232,24 @@ export function AtlasCanvas() {
         back-rim give the tissue form and a clean silhouette off the dark stage.
       */}
       <hemisphereLight
-        intensity={0.5}
-        color="#cdd8e8"
-        groundColor="#12161d"
+        intensity={light.hemi.intensity}
+        color={light.hemi.color}
+        groundColor={light.hemi.ground}
       />
-      <ambientLight intensity={0.14} />
+      <ambientLight intensity={light.ambient} />
       <directionalLight
         position={[-190, 240, -150]}
-        intensity={2.1}
+        intensity={light.key}
         color="#fff3ea"
       />
       <directionalLight
         position={[230, 50, 180]}
-        intensity={0.7}
+        intensity={light.fill}
         color="#9ec5ff"
       />
       <directionalLight
         position={[60, 130, -260]}
-        intensity={1.25}
+        intensity={light.back}
         color="#cfe0ff"
       />
 
