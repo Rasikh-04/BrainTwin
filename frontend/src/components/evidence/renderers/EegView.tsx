@@ -24,6 +24,15 @@ export function EegView({ evidence }: { evidence: EegEvidence }) {
   const [failed, setFailed] = useState<{ url: string; message: string } | null>(
     null,
   );
+  // The spectrogram is a static image. A missing file would otherwise render as
+  // a broken-image glyph, which reads like an empty-but-fine scan — the exact
+  // failure the volume and waveform loaders guard against. Track the url that
+  // failed (not a bare boolean) so a stale failure never sticks when the case
+  // changes, mirroring the waveform tagging above.
+  const [spectrogramFailedUrl, setSpectrogramFailedUrl] = useState<string | null>(
+    null,
+  );
+  const spectrogramFailed = spectrogramFailedUrl === evidence.spectrogram;
 
   useEffect(() => {
     let cancelled = false;
@@ -64,13 +73,35 @@ export function EegView({ evidence }: { evidence: EegEvidence }) {
               {evidence.duration_seconds}s
             </p>
           </div>
-          {/* Static precomputed image — no client-side signal processing. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={evidence.spectrogram}
-            alt="Precomputed EEG spectrogram for the seizure window"
-            className="w-full rounded-md border border-line bg-[#08090c]"
-          />
+          {spectrogramFailed ? (
+            <div className="flex items-center justify-center rounded-md border border-line bg-[#08090c] px-6 py-10 text-center">
+              <div className="max-w-sm space-y-1.5">
+                <p className="text-[13px] font-medium text-white/90">
+                  Spectrogram could not be loaded
+                </p>
+                <p className="text-[12px] leading-relaxed text-white/60">
+                  The precomputed image is missing or could not be read. Nothing
+                  is shown rather than an empty panel that could be mistaken for a
+                  flat signal.
+                </p>
+              </div>
+            </div>
+          ) : (
+            // Static precomputed image — no client-side signal processing.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={evidence.spectrogram}
+              alt="Precomputed EEG spectrogram for the seizure window"
+              className="w-full rounded-md border border-line bg-[#08090c]"
+              onError={() => {
+                console.error(
+                  "[evidence] failed to load spectrogram",
+                  evidence.spectrogram,
+                );
+                setSpectrogramFailedUrl(evidence.spectrogram);
+              }}
+            />
+          )}
         </section>
 
         <section className="space-y-2">

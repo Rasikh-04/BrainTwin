@@ -5,6 +5,92 @@ landed, what is deferred and who owns it, and the risks to keep in view. It is
 not a spec (the specs are `docs/DATA_CONTRACT.md` and `docs/MEDICAL_ACCURACY.md`);
 it is the shared state of the build.
 
+## 2026-07-22 Frontend session 6: honesty and robustness hardening
+
+Branch: `fe/atlas-visual-fidelity`. Owner: Abdul Mannan. A non-backend-dependent
+increment that locks in the medical-honesty rules with automated coverage and
+closes one silent-failure gap in the evidence viewer. Typecheck, lint, the new
+unit suite (31 tests), and the e2e suite (14) are all green.
+
+### What landed
+
+- **Unit-test tooling (Vitest).** There was no unit runner before — only
+  Playwright e2e. Added `vitest` (dev-only), `vitest.config.ts` (node env, pure
+  logic only, `@` alias), and `npm test` / `npm run test:watch` scripts. The
+  React / Niivue / R3F surfaces stay covered by e2e; this suite covers the pure
+  logic that e2e can only exercise indirectly.
+- **Tests for the three honesty choke points** (`src/lib/contract/*.test.ts`, 31
+  tests): `review.ts` (resolveSourced treats NEEDS_SOURCE / null / empty /
+  whitespace as pending and never leaks a citation onto a placeholder;
+  evidenceStrength distinguishes computed-from-mask vs cited-pattern;
+  hasUnreviewedContent; formatOverlapFraction thresholds), `links.ts`
+  (getRegionLinks only ever emits cited typical-patterns, one per match, and
+  derives `hasDemo` / first `caseId` honestly), and `load.ts` (the boundary
+  validators throw loudly — naming index and missing field — on a non-array
+  payload, an incomplete record, a non-ok HTTP status, or a malformed case /
+  waveform, with `fetch` mocked). These pin the "never blank, never invented,
+  computed vs cited never blur" contract so a regression fails a test, not a
+  reviewer.
+- **EEG spectrogram missing-asset state.** The spectrogram `<img>` had no error
+  handling, so a missing PNG rendered as a broken-image glyph — the "empty but
+  fine" failure every neighbouring loader (Niivue volumes, the waveform JSON)
+  already guards against. It now has an `onError` that shows the same honest
+  "could not be loaded" surface, url-tagged so a stale failure clears when the
+  case changes.
+
+### Notes
+
+- One test surfaced that `formatOverlapFraction(0)` renders `"0.00%"` (exact zero
+  falls under the sub-1% two-decimal branch). Left as-is — a 0% overlap does not
+  occur for a real region mapping — and documented in the test rather than
+  changing the display function.
+- Pre-existing `npm audit` findings (postcss / sharp) come from Next's own
+  transitive deps; their only "fix" downgrades Next to 9.3.3, so they are not
+  actioned here and were not introduced by the Vitest install.
+
+## 2026-07-22 Frontend session 5: two-step narrative polish
+
+Branch: `fe/atlas-visual-fidelity`. Owner: Abdul Mannan. With the substantive
+step-2 features now data-blocked on the backend (real `region_mappings`, stroke
+/ Alzheimer's cases, detailing meshes), this session hardened the *narrative* of
+the two-step UX — orientation and traceability framing — without inventing any
+medical content. Typecheck, lint, and the e2e suite (now 14, +3) are green;
+verified in a real browser in both themes.
+
+### What landed
+
+- **"About this demo" orientation dialog** (`chrome/AboutDialog.tsx`). States the
+  two-step method and, crucially, how to read the evidence: the four reserved
+  hues (selection / computed / cited / pending) as a legend, since that colour
+  language is the only way a reviewer tells a segmented finding from a
+  literature-level pattern from an unsourced placeholder. It authors no anatomy —
+  method and posture only — and reports what is wired straight from the loaded
+  disorders ("N of 4 disorders have a wired demo case"), listing the unwired ones
+  greyed rather than hiding the gap. Accessible: `role="dialog"`, `aria-modal`,
+  focus moved in on open and trapped, Esc + backdrop close, focus returned to the
+  opener.
+- **First-run + persistent access.** Auto-opens once per reviewer (`lib/intro.ts`,
+  localStorage `braintwin.intro.seen`, read post-mount to avoid a hydration
+  mismatch), reopenable anytime from an app-bar "About" (ⓘ) button in both modes.
+- **Legible step-2 entry.** The corner "Evidence →" became a self-explaining CTA
+  that names the payoff and the count ("Evidence · 2 studies →"), so the second
+  half of the demo is discoverable rather than a bare label.
+- **Region → evidence bridge.** From the region panel: a working "Browse disorder
+  studies →" in the honest empty state (today's real case, since
+  `typical_affected_regions` is empty), plus an actionable "demo →" chip on any
+  cited link that jumps straight into that disorder's case. `links.ts` now carries
+  the first `caseId` so the jump is data-driven. Both light up the moment cited
+  patterns land — no code change needed.
+
+### Notes
+
+- Nothing new is asserted about anatomy or involvement. The dialog reinforces the
+  pending-review posture rather than bypassing it, and the honesty-critical claim
+  types keep the same styling and language they have elsewhere.
+- No backend handoff added or changed. The data-blocked items from session 4
+  (tumour `region_mappings`, stroke / Alzheimer's cases, detailing meshes) still
+  stand exactly as logged there.
+
 ## 2026-07-22 Frontend session 4: step-2 evidence viewer (Niivue + EEG)
 
 Branch: `fe/atlas-visual-fidelity`. Owner: Abdul Mannan. Built step 2, the
