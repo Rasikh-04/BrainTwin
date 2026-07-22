@@ -9,8 +9,8 @@ interface TopBarProps {
   pendingCount: number;
   /** Which step is on screen — switches the app-bar between the two modes. */
   mode: ExplorerMode;
-  /** True when at least one disorder has a wired demo case (step 2 is reachable). */
-  hasEvidence: boolean;
+  /** Number of disorders with a wired demo case. > 0 means step 2 is reachable. */
+  studyCount: number;
   /** Open the region index drawer (small screens, where it is undocked). */
   onOpenIndex: () => void;
   /** Open the region detail drawer (small screens, where it is undocked). */
@@ -19,6 +19,8 @@ interface TopBarProps {
   onEnterEvidence: () => void;
   /** Return to step 1, the atlas. */
   onExitEvidence: () => void;
+  /** Open the "About this demo" orientation dialog. */
+  onOpenAbout: () => void;
 }
 
 /** A small anatomical mark — a stylised sagittal hemisphere with the medial
@@ -53,13 +55,15 @@ function BrainMark() {
 export function TopBar({
   pendingCount,
   mode,
-  hasEvidence,
+  studyCount,
   onOpenIndex,
   onOpenDetail,
   onEnterEvidence,
   onExitEvidence,
+  onOpenAbout,
 }: TopBarProps) {
   const isEvidence = mode === "evidence";
+  const hasEvidence = studyCount > 0;
 
   return (
     <header className="flex h-11 shrink-0 items-center gap-3 border-b border-line bg-surface-1 px-3">
@@ -116,15 +120,42 @@ export function TopBar({
               <button
                 type="button"
                 onClick={onEnterEvidence}
-                className="rounded-md border border-select/40 bg-select/10 px-2.5 py-1 text-[11.5px] text-select transition-colors hover:bg-select/20"
+                className="inline-flex items-center gap-1.5 rounded-md border border-select/45 bg-select/15 px-2.5 py-1 text-[11.5px] font-medium text-select transition-colors hover:bg-select/25"
               >
-                Evidence &#8594;
+                Evidence
+                <span className="ident rounded-sm bg-select/20 px-1 text-select">
+                  {studyCount} {studyCount === 1 ? "study" : "studies"}
+                </span>
+                <span aria-hidden>&#8594;</span>
               </button>
             )}
           </>
         )}
 
         <span aria-hidden className="mx-0.5 h-4 w-px bg-line" />
+        <button
+          type="button"
+          onClick={onOpenAbout}
+          aria-label="About this demo"
+          title="About this demo"
+          className="flex size-7 items-center justify-center rounded-md text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+          >
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 11v5" />
+            <path d="M12 7.75v.5" />
+          </svg>
+        </button>
         <ThemeToggle />
       </div>
     </header>

@@ -8,6 +8,15 @@ import { expect, test, type Page } from "@playwright/test";
  * medical-honesty placeholder rule, and the material-swap highlight path.
  */
 
+// The orientation dialog auto-opens on first visit (no localStorage). These
+// specs are about the atlas itself, so seed the "seen" flag to suppress it; its
+// first-run behaviour is covered separately in narrative.spec.ts.
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() =>
+    localStorage.setItem("braintwin.intro.seen", "1"),
+  );
+});
+
 /** The meshes are several MB and software-rendered in CI; give them room. */
 async function openAtlas(page: Page) {
   const errors: string[] = [];

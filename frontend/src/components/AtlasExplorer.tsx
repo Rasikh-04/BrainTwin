@@ -8,12 +8,14 @@ import { DissectionBar } from "@/components/atlas/DissectionBar";
 import { HoverReadout } from "@/components/atlas/HoverReadout";
 import { LayerControls } from "@/components/atlas/LayerControls";
 import { ViewControls } from "@/components/atlas/ViewControls";
+import { AboutDialog } from "@/components/chrome/AboutDialog";
 import { Drawer } from "@/components/chrome/Drawer";
 import { ReviewBanner } from "@/components/chrome/ReviewBanner";
 import { TopBar } from "@/components/chrome/TopBar";
 import { RegionIndex } from "@/components/panel/RegionIndex";
 import { RegionPanel } from "@/components/panel/RegionPanel";
 import { loadDisorders, loadRegions } from "@/lib/contract/load";
+import { hasSeenIntro, markIntroSeen } from "@/lib/intro";
 import { getStoredTheme } from "@/lib/theme";
 import { useAtlasStore } from "@/store/useAtlasStore";
 
@@ -64,6 +66,10 @@ export function AtlasExplorer() {
   // < md). Docked at desktop width, so these stay closed there.
   const [indexOpen, setIndexOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
+  // Orientation dialog. Auto-opens once per reviewer (localStorage), and is
+  // reopenable anytime from the app-bar. Read the "seen" flag post-mount so the
+  // server and first client render agree (it is closed) before it opens.
+  const [aboutOpen, setAboutOpen] = useState(false);
 
   // Reconcile the store to the persisted theme after hydration. localStorage is
   // the source of truth: the pre-paint head script already set <html data-theme>
@@ -73,6 +79,21 @@ export function AtlasExplorer() {
   useEffect(() => {
     setTheme(getStoredTheme());
   }, [setTheme]);
+
+  // First-run orientation: open the About dialog once, then remember it. This
+  // reads localStorage, so it must run post-mount — the server and first client
+  // render both start closed (avoiding a hydration mismatch), then this opens it
+  // if unseen. That deliberate post-mount setState is exactly this case, not a
+  // cascading-render smell.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (!hasSeenIntro()) setAboutOpen(true);
+  }, []);
+
+  const closeAbout = () => {
+    markIntroSeen();
+    setAboutOpen(false);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -114,7 +135,7 @@ export function AtlasExplorer() {
     (r) => r.review_status !== "reviewed",
   ).length;
 
-  const hasEvidence = disorders.some((d) => d.case_ids.length > 0);
+  const studyCount = disorders.filter((d) => d.case_ids.length > 0).length;
 
   if (loadError) {
     return (
@@ -136,13 +157,20 @@ export function AtlasExplorer() {
       <TopBar
         pendingCount={pendingCount}
         mode={mode}
-        hasEvidence={hasEvidence}
+        studyCount={studyCount}
         onOpenIndex={() => setIndexOpen(true)}
         onOpenDetail={() => setDetailOpen(true)}
         onEnterEvidence={() => enterEvidence()}
         onExitEvidence={exitEvidence}
+        onOpenAbout={() => setAboutOpen(true)}
       />
       <ReviewBanner pendingCount={pendingCount} />
+
+      <AboutDialog
+        open={aboutOpen}
+        onClose={closeAbout}
+        disorders={disorders}
+      />
 
       {mode === "evidence" ? (
         <EvidenceExplorer />

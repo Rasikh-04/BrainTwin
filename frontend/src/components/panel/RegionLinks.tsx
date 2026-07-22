@@ -17,10 +17,12 @@ import { useAtlasStore } from "@/store/useAtlasStore";
  */
 export function RegionLinks({ regionId }: { regionId: string }) {
   const disorders = useAtlasStore((s) => s.disorders);
+  const enterEvidence = useAtlasStore((s) => s.enterEvidence);
   const links = useMemo(
     () => getRegionLinks(regionId, disorders),
     [regionId, disorders],
   );
+  const hasStudies = disorders.some((d) => d.case_ids.length > 0);
 
   return (
     <section className="space-y-2">
@@ -32,11 +34,23 @@ export function RegionLinks({ regionId }: { regionId: string }) {
       </div>
 
       {links.length === 0 ? (
-        <p className="rounded-md border border-dashed border-line bg-surface-0/40 px-2.5 py-2 text-[11.5px] leading-relaxed text-ink-faint">
-          No cited disorder pattern references this region yet. Literature-level
-          links are added with a citation, and per-case involvement (tumour or
-          stroke masks overlapping this region) appears in the disorder demo.
-        </p>
+        <div className="space-y-2">
+          <p className="rounded-md border border-dashed border-line bg-surface-0/40 px-2.5 py-2 text-[11.5px] leading-relaxed text-ink-faint">
+            No cited disorder pattern references this region yet. Literature-level
+            links are added with a citation, and per-case involvement (tumour or
+            stroke masks overlapping this region) appears in the disorder demo.
+          </p>
+          {hasStudies && (
+            <button
+              type="button"
+              onClick={() => enterEvidence()}
+              className="inline-flex items-center gap-1 text-[11.5px] font-medium text-select transition-colors hover:text-select/80"
+            >
+              Browse disorder studies
+              <span aria-hidden>&#8594;</span>
+            </button>
+          )}
+        </div>
       ) : (
         <ul className="space-y-1.5">
           {links.map((link) => (
@@ -48,10 +62,14 @@ export function RegionLinks({ regionId }: { regionId: string }) {
                 <span className="text-[12.5px] font-medium text-ink">
                   {link.disorderName}
                 </span>
-                {link.hasDemo && (
-                  <span className="ident rounded bg-surface-2 px-1.5 py-0.5 text-[9px] uppercase tracking-wide text-ink-muted">
-                    demo
-                  </span>
+                {link.hasDemo && link.caseId && (
+                  <button
+                    type="button"
+                    onClick={() => enterEvidence(link.caseId ?? undefined)}
+                    className="ident inline-flex items-center gap-1 rounded bg-select/15 px-1.5 py-0.5 text-[9px] uppercase tracking-wide text-select transition-colors hover:bg-select/25"
+                  >
+                    demo <span aria-hidden>&#8594;</span>
+                  </button>
                 )}
               </div>
               {link.note && (

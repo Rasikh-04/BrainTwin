@@ -24,6 +24,9 @@ export interface RegionDisorderLink {
   note: string;
   /** True when the disorder has at least one demo case wired for step 2. */
   hasDemo: boolean;
+  /** The disorder's first demo case id, or null when none is wired. Lets the
+   *  atlas panel offer a direct jump into that case's step-2 evidence. */
+  caseId: string | null;
 }
 
 export function getRegionLinks(
@@ -42,6 +45,7 @@ export function getRegionLinks(
         source: pattern.source,
         note: pattern.note,
         hasDemo: disorder.case_ids.length > 0,
+        caseId: disorder.case_ids[0] ?? null,
       });
     }
   }

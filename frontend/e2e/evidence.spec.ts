@@ -9,6 +9,14 @@ import { expect, test, type Page } from "@playwright/test";
  * an uncomputed mapping says so, and EEG is framed as scalp-level, never a
  * confident brain focus.
  */
+// Suppress the first-run orientation dialog; its behaviour is covered in
+// narrative.spec.ts. Without this it would overlay the app-bar handoff button.
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() =>
+    localStorage.setItem("braintwin.intro.seen", "1"),
+  );
+});
+
 async function openAtlas(page: Page) {
   await page.goto("/", { waitUntil: "networkidle" });
   await expect(page.locator("canvas")).toBeVisible();
