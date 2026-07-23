@@ -67,7 +67,7 @@ export function EegView({ evidence }: { evidence: EegEvidence }) {
       <div className="mx-auto max-w-4xl space-y-5 p-5">
         <section className="space-y-2">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h3 className="text-[13px] font-semibold text-ink">Spectrogram</h3>
+            <h3 className="t-read font-semibold text-ink">Spectrogram</h3>
             <p className="ident text-ink-faint">
               onset {evidence.onset_seconds}s &middot; duration{" "}
               {evidence.duration_seconds}s
@@ -76,10 +76,10 @@ export function EegView({ evidence }: { evidence: EegEvidence }) {
           {spectrogramFailed ? (
             <div className="flex items-center justify-center rounded-md border border-line bg-[#08090c] px-6 py-10 text-center">
               <div className="max-w-sm space-y-1.5">
-                <p className="text-[13px] font-medium text-white/90">
+                <p className="t-read font-medium text-white/90">
                   Spectrogram could not be loaded
                 </p>
-                <p className="text-[12px] leading-relaxed text-white/60">
+                <p className="t-body leading-relaxed text-white/60">
                   The precomputed image is missing or could not be read. Nothing
                   is shown rather than an empty panel that could be mistaken for a
                   flat signal.
@@ -106,7 +106,7 @@ export function EegView({ evidence }: { evidence: EegEvidence }) {
 
         <section className="space-y-2">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h3 className="text-[13px] font-semibold text-ink">
+            <h3 className="t-read font-semibold text-ink">
               Channel traces
             </h3>
             {evidence.involved_channels.length > 0 && (
@@ -118,7 +118,7 @@ export function EegView({ evidence }: { evidence: EegEvidence }) {
 
           <div className="rounded-md border border-line bg-surface-1">
             {error ? (
-              <p className="px-4 py-6 text-center text-[12px] text-pending">
+              <p className="t-body px-4 py-6 text-center text-pending">
                 {error}
               </p>
             ) : waveform ? (
@@ -134,7 +134,7 @@ export function EegView({ evidence }: { evidence: EegEvidence }) {
           </div>
         </section>
 
-        <p className="rounded-md border border-dashed border-line-strong bg-surface-1 px-3 py-2 text-[11.5px] leading-relaxed text-ink-muted">
+        <p className="t-ctl rounded-md border border-dashed border-line-strong bg-surface-1 px-3 py-2 leading-relaxed text-ink-muted">
           Scalp EEG is a surface measurement. The involved channels overlie a
           brain region approximately; they do not localise a precise seizure
           focus, and nothing here is drawn onto the brain as a confident source.

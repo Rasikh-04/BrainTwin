@@ -14,18 +14,18 @@ export function ReviewBanner({ pendingCount }: { pendingCount: number }) {
   return (
     <div
       role="status"
-      className="flex shrink-0 items-center gap-2.5 border-b border-pending/25 bg-pending/10 px-3 py-1"
+      className="anim-fade flex shrink-0 items-center gap-2.5 border-b border-pending/25 bg-pending/10 px-3 py-1"
     >
       <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-pending" />
-      <p className="min-w-0 truncate text-[11.5px] leading-tight text-pending">
-        <span className="font-medium">Pending expert review.</span>{" "}
+      <p className="t-ctl min-w-0 truncate leading-tight text-pending">
+        <span className="font-medium">Research preview.</span>{" "}
         <span className="text-pending/80">
-          Nothing here has been signed off by a neurologist &mdash; descriptions
-          marked pending have no cited source yet and are not clinical fact.
+          For demonstration only, not for clinical use &mdash; descriptions
+          marked pending are awaiting expert sign-off and are not clinical fact.
         </span>
       </p>
       <span className="ident ml-auto shrink-0 text-pending/60">
-        {pendingCount} unreviewed
+        {pendingCount} pending sign-off
       </span>
     </div>
   );

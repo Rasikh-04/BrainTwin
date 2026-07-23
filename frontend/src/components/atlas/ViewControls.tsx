@@ -25,7 +25,7 @@ export function ViewControls() {
   const hasSelection = useAtlasStore((s) => s.selectedRegionId !== null);
 
   return (
-    <div className="panel pointer-events-auto flex items-center gap-2 p-1.5">
+    <div className="panel anim-rise pointer-events-auto flex items-center gap-2 p-1.5">
       <div className="segment">
         {PRESETS.map(({ key, label }) => {
           const active = viewPreset === key;
@@ -35,7 +35,7 @@ export function ViewControls() {
               type="button"
               onClick={() => applyView(key)}
               aria-pressed={active}
-              className={`rounded-[6px] px-2.5 py-1 text-[11.5px] transition-colors ${
+              className={`t-ctl rounded-[6px] px-2.5 py-1 transition-colors ${
                 active
                   ? "bg-select/20 text-select"
                   : "text-ink-muted hover:bg-surface-2 hover:text-ink"
@@ -57,7 +57,7 @@ export function ViewControls() {
             ? "Frame the selected region instead of the whole brain"
             : "Select a region first"
         }
-        className={`rounded px-2.5 py-1 text-[11.5px] transition-colors ${
+        className={`t-ctl rounded px-2.5 py-1 transition-colors ${
           focusSelected
             ? "bg-select/15 text-select"
             : hasSelection

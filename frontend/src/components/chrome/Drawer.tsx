@@ -39,7 +39,7 @@ export function Drawer({ open, onClose, side, label, children }: DrawerProps) {
         type="button"
         aria-label={`Close ${label}`}
         onClick={onClose}
-        className="absolute inset-0 bg-void/60 backdrop-blur-sm"
+        className="anim-fade absolute inset-0 bg-void/60 backdrop-blur-sm"
       />
       <div
         role="dialog"
@@ -47,12 +47,12 @@ export function Drawer({ open, onClose, side, label, children }: DrawerProps) {
         aria-label={label}
         className={`absolute inset-y-0 flex w-80 max-w-[85vw] flex-col bg-surface-1 shadow-2xl ${
           side === "left"
-            ? "left-0 border-r border-line"
-            : "right-0 border-l border-line"
+            ? "anim-drawer-left left-0 border-r border-line"
+            : "anim-drawer-right right-0 border-l border-line"
         }`}
       >
         <div className="flex h-11 shrink-0 items-center justify-between border-b border-line px-3">
-          <span className="text-[12px] font-medium text-ink">{label}</span>
+          <span className="t-body font-medium text-ink">{label}</span>
           <button
             type="button"
             onClick={onClose}

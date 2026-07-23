@@ -16,7 +16,7 @@ import {
 } from "./types";
 
 export const PENDING_PLACEHOLDER =
-  "Pending expert review — no cited source yet.";
+  "Awaiting expert sign-off — no cited source yet.";
 
 export type SourcedResult =
   | { status: "sourced"; text: string; citation: string | null }

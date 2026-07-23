@@ -29,7 +29,7 @@ function LegendRow({
         aria-hidden
         className={`mt-1 size-2.5 shrink-0 rounded-full ${swatch}`}
       />
-      <p className="text-[12px] leading-relaxed text-ink-muted">
+      <p className="t-body leading-relaxed text-ink-muted">
         <span className="font-medium text-ink">{term}</span> — {meaning}
       </p>
     </li>
@@ -114,7 +114,7 @@ export function AboutDialog({ open, onClose, disorders }: AboutDialogProps) {
         type="button"
         aria-label="Close about this demo"
         onClick={onClose}
-        className="absolute inset-0 bg-void/70 backdrop-blur-sm"
+        className="anim-fade absolute inset-0 bg-void/70 backdrop-blur-sm"
       />
 
       <div
@@ -122,11 +122,11 @@ export function AboutDialog({ open, onClose, disorders }: AboutDialogProps) {
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="panel relative flex max-h-[85dvh] w-full max-w-lg flex-col overflow-hidden"
+        className="panel anim-pop relative flex max-h-[85dvh] w-full max-w-lg flex-col overflow-hidden"
       >
         <header className="flex items-start justify-between gap-3 border-b border-line px-5 py-4">
           <div>
-            <h2 id={titleId} className="text-[15px] font-semibold text-ink">
+            <h2 id={titleId} className="t-head font-semibold text-ink">
               About this demo
             </h2>
             <p className="ident mt-0.5">Brain digital twin · proof of concept</p>
@@ -154,7 +154,7 @@ export function AboutDialog({ open, onClose, disorders }: AboutDialogProps) {
         </header>
 
         <div className="scroll-thin flex-1 space-y-5 overflow-y-auto px-5 py-4">
-          <p className="text-[12.5px] leading-relaxed text-ink-muted">
+          <p className="t-body leading-relaxed text-ink-muted">
             Explore a normal brain by region, then switch into a disorder&rsquo;s
             de-identified case and see exactly which regions changed — with every
             highlighted region traceable back to the real scan, EEG, or report it
@@ -162,11 +162,11 @@ export function AboutDialog({ open, onClose, disorders }: AboutDialogProps) {
           </p>
 
           <section className="space-y-2">
-            <h3 className="text-[10px] font-medium uppercase tracking-[0.13em] text-ink-faint">
+            <h3 className="t-tag font-medium uppercase tracking-[0.13em] text-ink-faint">
               The two steps
             </h3>
             <ol className="space-y-1.5">
-              <li className="flex gap-2.5 text-[12.5px] leading-relaxed text-ink-muted">
+              <li className="t-body flex gap-2.5 leading-relaxed text-ink-muted">
                 <span className="ident mt-px shrink-0 text-select">1</span>
                 <span>
                   <span className="font-medium text-ink">
@@ -175,7 +175,7 @@ export function AboutDialog({ open, onClose, disorders }: AboutDialogProps) {
                   Click any region, or search the index, for its atlas record.
                 </span>
               </li>
-              <li className="flex gap-2.5 text-[12.5px] leading-relaxed text-ink-muted">
+              <li className="t-body flex gap-2.5 leading-relaxed text-ink-muted">
                 <span className="ident mt-px shrink-0 text-select">2</span>
                 <span>
                   <span className="font-medium text-ink">
@@ -189,7 +189,7 @@ export function AboutDialog({ open, onClose, disorders }: AboutDialogProps) {
           </section>
 
           <section className="space-y-2">
-            <h3 className="text-[10px] font-medium uppercase tracking-[0.13em] text-ink-faint">
+            <h3 className="t-tag font-medium uppercase tracking-[0.13em] text-ink-faint">
               How to read the evidence
             </h3>
             <ul className="space-y-2 rounded-md border border-line bg-surface-0/50 px-3 py-3">
@@ -211,16 +211,16 @@ export function AboutDialog({ open, onClose, disorders }: AboutDialogProps) {
               <LegendRow
                 swatch="bg-pending"
                 term="pending"
-                meaning="no cited source yet; a placeholder awaiting review, not clinical fact."
+                meaning="no cited source yet; awaiting expert sign-off, not clinical fact."
               />
             </ul>
           </section>
 
           <section className="space-y-2">
-            <h3 className="text-[10px] font-medium uppercase tracking-[0.13em] text-ink-faint">
+            <h3 className="t-tag font-medium uppercase tracking-[0.13em] text-ink-faint">
               What is wired
             </h3>
-            <p className="text-[12px] leading-relaxed text-ink-muted">
+            <p className="t-body leading-relaxed text-ink-muted">
               {wired.length} of {disorders.length} disorders have a wired demo
               case. The rest are listed so the demo is honest about the gaps
               rather than hiding them.
@@ -231,7 +231,7 @@ export function AboutDialog({ open, onClose, disorders }: AboutDialogProps) {
                 return (
                   <li
                     key={disorder.disorder_id}
-                    className="flex items-center gap-2 text-[12px] text-ink-muted"
+                    className="t-body flex items-center gap-2 text-ink-muted"
                   >
                     <span
                       aria-hidden
@@ -253,7 +253,7 @@ export function AboutDialog({ open, onClose, disorders }: AboutDialogProps) {
             </ul>
           </section>
 
-          <p className="rounded-md border border-pending/25 bg-pending/[0.06] px-3 py-2.5 text-[11.5px] leading-relaxed text-pending/90">
+          <p className="t-ctl rounded-md border border-pending/25 bg-pending/[0.06] px-3 py-2.5 leading-relaxed text-pending/90">
             Everything here is pending expert review. Nothing has been signed off
             by a neurologist, and nothing shown is a diagnosis.
           </p>
@@ -263,7 +263,7 @@ export function AboutDialog({ open, onClose, disorders }: AboutDialogProps) {
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md border border-select/40 bg-select/10 px-3.5 py-1.5 text-[12px] font-medium text-select transition-colors hover:bg-select/20"
+            className="t-body transform-gpu rounded-md border border-select/40 bg-select/10 px-3.5 py-1.5 font-medium text-select transition-[background-color,transform,box-shadow] duration-200 hover:-translate-y-px hover:bg-select/20 hover:shadow-[0_6px_16px_-8px_var(--color-select)]"
           >
             Start exploring
           </button>

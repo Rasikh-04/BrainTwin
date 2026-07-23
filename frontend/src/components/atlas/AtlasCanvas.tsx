@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import type { WebGLRenderer } from "three";
 import { OrbitControls } from "@react-three/drei";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import * as THREE from "three";
@@ -198,9 +199,37 @@ export function AtlasCanvas() {
   const theme = useAtlasStore((s) => s.theme);
   const light = LIGHTING[theme];
   const controls = useRef<OrbitControlsImpl | null>(null);
+  const glRef = useRef<WebGLRenderer | null>(null);
+
+  // Free this WebGL context the instant the atlas unmounts (entering the
+  // evidence view). The app runs two WebGL contexts one at a time; if the atlas
+  // context is still held by the GPU process when Niivue creates its context in
+  // the evidence view, the new context can come up already lost on stricter
+  // drivers (Intel/Mesa on Linux), which shows as "shader failed to link". R3F
+  // disposes on unmount, but forcing the loss here releases the slot eagerly and
+  // deterministically, before Niivue asks for its own.
+  useEffect(() => {
+    return () => {
+      const gl = glRef.current;
+      if (!gl) return;
+      try {
+        gl.forceContextLoss();
+      } catch {
+        // Context may already be gone; nothing to release.
+      }
+      try {
+        gl.dispose();
+      } catch {
+        // Renderer may already be disposed by R3F; ignore.
+      }
+    };
+  }, []);
 
   return (
     <Canvas
+      onCreated={({ gl }) => {
+        glRef.current = gl;
+      }}
       // Cap DPR: a retina laptop rendering the cortex at 3x is the easiest way
       // to lose the "no lag" requirement for no visible gain.
       dpr={[1, 1.75]}

@@ -19,7 +19,7 @@ export function HoverReadout() {
 
   return (
     <div className="panel pointer-events-none px-2.5 py-1.5">
-      <p className="text-[12px] leading-tight text-ink">
+      <p className="t-body leading-tight text-ink">
         {region?.name ?? hoveredRegionId}
       </p>
       <p className="ident mt-0.5">{hoveredRegionId}</p>

@@ -23,12 +23,12 @@ export function SourcedField({
 
   return (
     <section className="space-y-1.5">
-      <h3 className="text-[10px] font-medium uppercase tracking-[0.13em] text-ink-faint">
+      <h3 className="t-tag font-medium uppercase tracking-[0.13em] text-ink-faint">
         {label}
       </h3>
 
       {resolved.status === "pending" ? (
-        <p className="flex gap-2 rounded-md border border-dashed border-pending/35 bg-pending/[0.06] px-2.5 py-2 text-[12.5px] leading-relaxed text-pending/90">
+        <p className="t-body flex gap-2 rounded-md border border-dashed border-pending/35 bg-pending/[0.06] px-2.5 py-2 leading-relaxed text-pending/90">
           <span aria-hidden className="select-none">
             &#9888;
           </span>
@@ -36,7 +36,7 @@ export function SourcedField({
         </p>
       ) : (
         <>
-          <p className="text-[13px] leading-relaxed text-ink/90">
+          <p className="t-read leading-relaxed text-ink/90">
             {resolved.text}
           </p>
           {resolved.citation && (

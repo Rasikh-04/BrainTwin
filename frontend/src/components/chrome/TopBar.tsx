@@ -66,10 +66,10 @@ export function TopBar({
   const hasEvidence = studyCount > 0;
 
   return (
-    <header className="flex h-11 shrink-0 items-center gap-3 border-b border-line bg-surface-1 px-3">
+    <header className="anim-fade flex h-11 shrink-0 items-center gap-3 border-b border-line bg-surface-1 px-3">
       <div className="flex items-center gap-2 text-select">
         <BrainMark />
-        <span className="text-[13.5px] font-semibold tracking-tight text-ink">
+        <span className="t-brand font-semibold tracking-tight text-ink">
           BrainTwin
         </span>
       </div>
@@ -85,10 +85,10 @@ export function TopBar({
         {pendingCount > 0 && (
           <span
             className="mr-1 hidden items-center gap-1.5 rounded-full border border-pending/30 bg-pending/10 px-2 py-0.5 md:inline-flex"
-            title="Content is awaiting neurologist review"
+            title="Demonstration content, pending expert sign-off"
           >
             <span aria-hidden className="size-1.5 rounded-full bg-pending" />
-            <span className="ident text-pending/90">pending review</span>
+            <span className="ident text-pending/90">research preview</span>
           </span>
         )}
 
@@ -96,7 +96,7 @@ export function TopBar({
           <button
             type="button"
             onClick={onExitEvidence}
-            className="rounded-md border border-line px-2.5 py-1 text-[11.5px] text-ink-muted transition-colors hover:border-line-strong hover:text-ink"
+            className="t-ctl rounded-md border border-line px-2.5 py-1 text-ink-muted transition-colors hover:border-line-strong hover:text-ink"
           >
             &#8592; Atlas
           </button>
@@ -105,14 +105,14 @@ export function TopBar({
             <button
               type="button"
               onClick={onOpenIndex}
-              className="rounded-md px-2.5 py-1 text-[11.5px] text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink lg:hidden"
+              className="t-ctl rounded-md px-2.5 py-1 text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink lg:hidden"
             >
               Regions
             </button>
             <button
               type="button"
               onClick={onOpenDetail}
-              className="rounded-md px-2.5 py-1 text-[11.5px] text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink md:hidden"
+              className="t-ctl rounded-md px-2.5 py-1 text-ink-muted transition-colors hover:bg-surface-2 hover:text-ink md:hidden"
             >
               Detail
             </button>
@@ -120,7 +120,7 @@ export function TopBar({
               <button
                 type="button"
                 onClick={onEnterEvidence}
-                className="inline-flex items-center gap-1.5 rounded-md border border-select/45 bg-select/15 px-2.5 py-1 text-[11.5px] font-medium text-select transition-colors hover:bg-select/25"
+                className="t-ctl inline-flex transform-gpu items-center gap-1.5 rounded-md border border-select/45 bg-select/15 px-2.5 py-1 font-medium text-select transition-[background-color,transform,box-shadow] duration-200 hover:-translate-y-px hover:bg-select/25 hover:shadow-[0_6px_16px_-8px_var(--color-select)]"
               >
                 Evidence
                 <span className="ident rounded-sm bg-select/20 px-1 text-select">

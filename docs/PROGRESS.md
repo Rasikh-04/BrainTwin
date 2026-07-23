@@ -5,6 +5,39 @@ landed, what is deferred and who owns it, and the risks to keep in view. It is
 not a spec (the specs are `docs/DATA_CONTRACT.md` and `docs/MEDICAL_ACCURACY.md`);
 it is the shared state of the build.
 
+## 2026-07-24 Frontend session 7: UI polish, honest atrophy captions, research-preview framing
+
+Branch: `data/alzheimers-atrophy` (frontend work committed alongside the backend
+stroke pipeline, since both halves' uncommitted work already shared this branch).
+Owner: Abdul Mannan (Rasikh-04). A polish and honesty pass over the built two-step
+UI plus two correctness fixes. Typecheck, lint, and the 31 unit tests are green.
+
+### What landed
+
+- **Atrophy-pair caption honesty.** The Alzheimer's viewer labelled its two panels
+  "Baseline" and "Follow-up", which reads as one patient scanned over time. The
+  wired OASIS case is a cross-subject comparison of two different de-identified
+  subjects (a CDR 0 reference vs a CDR 2 case) using modulated GM VBM maps, not a
+  longitudinal pair. Panels are now "Reference" and "Case", and the viewer prints
+  the case's own caveat pulled verbatim from the mappings' shared provenance
+  (data-driven, never authored in the component; shown only when the data carries
+  one shared string). Closes the frontend honesty nit backend session 1 flagged.
+- **Research-preview framing.** The mandated pending-review posture (golden rule 4)
+  is kept in full: the persistent banner, the NEEDS_SOURCE placeholders, the
+  pending hue, and `review_status` all stay. Only the wording changed, from
+  "pending expert review / unreviewed" to a research-preview, not-for-clinical-use
+  register that reads as deliberate rigor rather than unfinished software.
+- **Fix `react-hooks/set-state-in-effect` in NiivueMount.** The retry counter now
+  resets during render (React's adjust-state-on-prop-change pattern) instead of in
+  an effect, so lint is clean.
+- **A ui-ux-pro-max visual pass** across the atlas and evidence chrome.
+
+### Deferred (unchanged owners)
+
+- **Detailing meshes (veins / arteries / nerves)** stay disabled "soon". The
+  download script fetches source `.blend` / `.obj` only; the Blender export and
+  MNI alignment are a human task per `docs/ASSET_SOURCING.md`, not scriptable here.
+
 ## 2026-07-23 Backend session 3: stroke pipeline written, ready to run on extract
 
 Branch: `data/alzheimers-atrophy`. Owner: Tabeen. The ATLAS v2.0 download was still in

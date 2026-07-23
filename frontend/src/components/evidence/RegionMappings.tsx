@@ -25,13 +25,12 @@ export function RegionMappings({ mappings }: { mappings: RegionMapping[] }) {
   if (mappings.length === 0) {
     return (
       <div className="rounded-md border border-dashed border-pending/35 bg-pending/[0.06] px-3 py-3">
-        <p className="text-[12.5px] font-medium text-pending/90">
+        <p className="t-body font-medium text-pending/90">
           Region involvement not yet computed
         </p>
-        <p className="mt-1 text-[11.5px] leading-relaxed text-pending/80">
+        <p className="t-ctl mt-1 leading-relaxed text-pending/80">
           This case&rsquo;s mask has not been overlapped with the atlas yet, so
-          no regions are highlighted. This is a pending backend step, not a
-          finding of no involvement.
+          no regions are highlighted. This is not a finding of no involvement.
         </p>
       </div>
     );
@@ -51,10 +50,10 @@ export function RegionMappings({ mappings }: { mappings: RegionMapping[] }) {
         return (
           <li
             key={mapping.region_id}
-            className="rounded-md border border-line bg-surface-0 px-3 py-2.5"
+            className="rounded-md border border-line bg-surface-0 px-3 py-2.5 transition-colors hover:border-line-strong"
           >
             <div className="flex items-baseline justify-between gap-2">
-              <p className="text-[12.5px] font-medium text-ink">
+              <p className="t-body font-medium text-ink">
                 {region?.name ?? mapping.region_id}
               </p>
               <span className={`ident shrink-0 ${roleColor}`}>
@@ -65,7 +64,7 @@ export function RegionMappings({ mappings }: { mappings: RegionMapping[] }) {
 
             <div className="mt-2 flex flex-wrap items-center gap-1.5">
               <span
-                className={`rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.1em] ${
+                className={`t-tag rounded px-1.5 py-0.5 font-medium uppercase tracking-[0.1em] ${
                   isComputed
                     ? "bg-computed/15 text-computed"
                     : "bg-cited/15 text-cited"
@@ -84,12 +83,12 @@ export function RegionMappings({ mappings }: { mappings: RegionMapping[] }) {
             </div>
 
             {mapping.provenance && (
-              <p className="mt-2 text-[11.5px] leading-relaxed text-ink-muted">
+              <p className="t-ctl mt-2 leading-relaxed text-ink-muted">
                 {mapping.provenance}
               </p>
             )}
             {mapping.notes && (
-              <p className="mt-1 text-[11px] leading-relaxed text-ink-faint">
+              <p className="t-fine mt-1 leading-relaxed text-ink-faint">
                 {mapping.notes}
               </p>
             )}

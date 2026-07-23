@@ -7,8 +7,8 @@ import { useAtlasStore, useSelectedRegion } from "@/store/useAtlasStore";
 function MetaRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-baseline justify-between gap-3 py-1.5">
-      <dt className="text-[11px] text-ink-faint">{label}</dt>
-      <dd className="text-right text-[12px] text-ink-muted">{value}</dd>
+      <dt className="t-fine text-ink-faint">{label}</dt>
+      <dd className="t-body text-right text-ink-muted">{value}</dd>
     </div>
   );
 }
@@ -32,9 +32,9 @@ export function RegionPanel() {
 
   if (!region) {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-2 px-6 text-center">
-        <p className="text-[13px] text-ink-muted">No region selected</p>
-        <p className="max-w-60 text-[12px] leading-relaxed text-ink-faint">
+      <div className="anim-fade flex h-full flex-col items-center justify-center gap-2 px-6 text-center">
+        <p className="t-read text-ink-muted">No region selected</p>
+        <p className="t-body max-w-60 leading-relaxed text-ink-faint">
           Click a region on the brain, or pick one from the index, to see its
           atlas record.
         </p>
@@ -47,9 +47,9 @@ export function RegionPanel() {
   const isHidden = hiddenRegionIds.has(region.region_id);
 
   return (
-    <div className="flex h-full flex-col">
+    <div key={region.region_id} className="anim-fade flex h-full flex-col">
       <header className="border-b border-line px-4 py-3.5">
-        <h2 className="text-[16px] font-semibold leading-snug text-ink">
+        <h2 className="t-head-lg font-semibold leading-snug text-ink">
           {region.name}
         </h2>
         <p className="ident mt-1">{region.region_id}</p>
@@ -62,7 +62,7 @@ export function RegionPanel() {
               isolateRegion(isIsolated ? null : region.region_id)
             }
             aria-pressed={isIsolated}
-            className={`rounded-md border px-2.5 py-1 text-[11.5px] transition-colors ${
+            className={`t-ctl rounded-md border px-2.5 py-1 transition-colors ${
               isIsolated
                 ? "border-select/50 bg-select/15 text-select"
                 : "border-line text-ink-muted hover:border-line-strong hover:text-ink"
@@ -78,7 +78,7 @@ export function RegionPanel() {
                 : hideRegion(region.region_id)
             }
             aria-pressed={isHidden}
-            className={`rounded-md border px-2.5 py-1 text-[11.5px] transition-colors ${
+            className={`t-ctl rounded-md border px-2.5 py-1 transition-colors ${
               isHidden
                 ? "border-pending/50 bg-pending/10 text-pending"
                 : "border-line text-ink-muted hover:border-line-strong hover:text-ink"
@@ -110,7 +110,7 @@ export function RegionPanel() {
           />
         </dl>
 
-        <p className="mt-5 text-[11px] leading-relaxed text-ink-faint">
+        <p className="t-fine mt-5 leading-relaxed text-ink-faint">
           Coordinates are the centroid of this region in the atlas mesh, not a
           measurement from any patient scan.
         </p>

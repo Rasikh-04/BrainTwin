@@ -52,7 +52,7 @@ export function LesionOverlay({ evidence }: { evidence: LesionOverlayEvidence })
             {labels.map(([value, name]) => (
               <li
                 key={value}
-                className="flex items-baseline gap-1.5 text-[11.5px] text-ink-muted"
+                className="t-ctl flex items-baseline gap-1.5 text-ink-muted"
               >
                 <span className="ident tabular-nums text-ink-faint">
                   {value}
