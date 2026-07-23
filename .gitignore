@@ -1,5 +1,6 @@
 # Raw downloaded datasets (never committed; fetched via download/ scripts)
 data/raw/*
+data/derived/
 
 # Source anatomy meshes for the detailing layers (veins/arteries/nerves).
 # Fetched via backend/download_detailing_assets.sh; large and re-downloadable.

@@ -274,8 +274,27 @@ def build_tumor(case_id="brats-001", src_case="BraTS2021_00000") -> dict:
     src = RAW / "tumor" / src_case
     out = ASSETS / "cases" / case_id
     out.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(src / f"{src_case}_t1ce.nii.gz", out / "base.nii.gz")
-    shutil.copyfile(src / f"{src_case}_seg.nii.gz", out / "mask.nii.gz")
+    base_src = src / f"{src_case}_t1ce.nii.gz"
+    mask_src = src / f"{src_case}_seg.nii.gz"
+    shutil.copyfile(base_src, out / "base.nii.gz")
+    shutil.copyfile(mask_src, out / "mask.nii.gz")
+
+    # Grounded region involvement (root CLAUDE.md golden rules 1-2): computed from the
+    # actual segmentation mask intersected with the DK+aseg atlas, never guessed. BraTS
+    # is in SRI24 space, so lesion_overlap registers it to MNI152 (dipy affine, NOT
+    # FreeSurfer) before the intersection. Labels 1/2/4 (necrotic/edema/enhancing) are
+    # merged as the lesion extent.
+    from lesion_overlap import compute_region_mappings
+
+    mappings, qc = compute_region_mappings(
+        base_src, mask_src, register=True, lesion_values=(1, 2, 4),
+        source_note="glioma extent = segmentation labels 1 (necrotic core), 2 (edema), "
+                    "4 (enhancing tumor) merged.",
+    )
+    print(f"  overlap: {qc['regions_touched']} regions touched, "
+          f"primary={qc['primary']} "
+          f"({qc['lesion_voxels_in_labelled_brain']}/{qc['lesion_voxels_in_mni']} "
+          f"lesion voxels inside a labelled region)")
 
     case = {
         "case_id": case_id,
@@ -290,11 +309,7 @@ def build_tumor(case_id="brats-001", src_case="BraTS2021_00000") -> dict:
             "mask": f"/assets/cases/{case_id}/mask.nii.gz",
             "mask_labels": {"1": "necrotic core", "2": "edema", "4": "enhancing tumor"},
         },
-        # Left EMPTY on purpose. Real mask-to-DK-atlas overlap needs BraTS registered
-        # into the atlas space; that is the backend registration pipeline, not a guess.
-        # TODO(data): compute region_mappings from mask.nii.gz intersect DK atlas in a
-        # shared space; mark role primary when overlap_fraction_of_region >= 0.10.
-        "region_mappings": [],
+        "region_mappings": mappings,
         "review_status": "pending",
     }
     write_json_both(f"cases/{case_id}.json", case)

@@ -5,6 +5,89 @@ landed, what is deferred and who owns it, and the risks to keep in view. It is
 not a spec (the specs are `docs/DATA_CONTRACT.md` and `docs/MEDICAL_ACCURACY.md`);
 it is the shared state of the build.
 
+## 2026-07-23 Backend session 2: tumor region involvement, computed from the mask
+
+Branch: `data/alzheimers-atrophy`. Owner: Tabeen. The flagship backend increment and
+the one the frontend has been data-blocked on the longest: `brats-001` showed
+"Region involvement not yet computed" because its `region_mappings` was empty. It now
+carries real, computed involvement, so the two-step demo finally proves point 1
+(mapping is real, not decorative) for the tumor pillar, not just for the cited
+Alzheimer's pattern. Contract validator passes structurally and with `--check-assets`.
+
+### What landed
+
+- **A DK+aseg parcellation as a volume, built from our own meshes**
+  (`backend/mni_parcellation.py`). To intersect a lesion with named regions we need
+  the atlas as a labelled volume in a shared space. Rather than run FreeSurfer
+  recon-all per patient (unnecessary, and the user confirmed the FreeSurfer download
+  is not needed), we voxelize the SAME Desikan-Killiany / aseg surface meshes that
+  already define `regions.json` and the glbs onto the MNI152 1mm grid: each brain
+  voxel (inside the MNI152 brain mask) is assigned to the anatomically nearest region
+  surface (nearest-vertex / Voronoi). Because the labelmap is built from those meshes,
+  every voxel label IS a `regions.json` id, so the case-to-atlas join cannot silently
+  drift. All 100 regions are represented; the 25 solid gray-matter subcortical
+  structures land on themselves at their own centroid to within 3 mm, and the only
+  "misses" are hollow/nested structures (ventricles, cerebellar white matter) whose
+  geometric centroid legitimately sits inside the neighbour they wrap. Cached under
+  `data/derived/` (git-ignored, regenerable in about 7 s).
+- **Lesion-to-atlas overlap** (`backend/lesion_overlap.py`). BraTS is in SRI24 voxel
+  space, so the skull-stripped T1ce is affine-registered to the (brain-masked) MNI152
+  template with dipy (mutual information; no FreeSurfer, no FSL), and the segmentation
+  mask is resampled with nearest-neighbour into MNI152. It is then intersected with
+  the labelmap: for every region the lesion touches we record `overlap_voxels` and
+  `overlap_fraction_of_region`, and mark `role: primary` at or above a 0.10 fraction
+  (the documented threshold), `secondary` below. Sub-10-voxel border specks from
+  resampling are dropped. The same function serves stroke with `register=False`, since
+  ATLAS v2.0 masks are already in MNI152.
+- **`brats-001` now maps to 27 regions** (18 primary) computed from the mask, wired
+  through `build_tumor()`. 99.8% of the lesion's MNI voxels fall inside a labelled
+  region. Every mapping is `evidence_type: "segmentation_mask"` with a real
+  `overlap_metric` and a provenance string that states the registration, the
+  approximate voxel parcellation, the threshold, and the pending-review status. No
+  region is added because a glioma "usually" involves it (root CLAUDE.md golden rules
+  1-2); the set comes only from the intersection.
+
+### Verified, not assumed
+
+- The involved set is anatomically coherent, which is the real check that
+  registration and parcellation agree: BraTS2021_00000 comes out as a large left
+  frontal "butterfly" glioma. Left anterior cingulate is 98% and 73% engulfed, with
+  left caudate, putamen, pallidum, accumbens, corpus callosum (anterior, mid-anterior,
+  central), left orbito / middle / superior frontal, pars triangularis / opercularis,
+  and insula, plus a small contralateral right anterior cingulate reached across the
+  corpus callosum. The regions cluster in one tight neighbourhood around a single
+  lesion, not scattered across the brain, which is what a correct intersection must
+  produce.
+
+### Reviewable choices (for the neuro pass, all disclosed in the data)
+
+- **Lesion extent = necrotic core + edema + enhancing tumor (labels 1, 2, 4) merged.**
+  This counts peritumoral edema as "affected", which is the broad reading; a
+  tumor-core-only reading (labels 1, 4) is a one-line change (`lesion_values=(1, 4)`).
+  The merge is stated in every mapping's provenance and the three sub-labels stay
+  distinct in `mask_labels` and the Niivue overlay, so a reviewer sees exactly what
+  was counted. Left as the broad reading pending expert review.
+- **The parcellation and the affine registration are approximate** and labelled as
+  such in provenance. Affine (not diffeomorphic) registration and nearest-vertex
+  parcellation are POC-grade; a SyN refine or a published volumetric DKT atlas would
+  tighten region borders. The overlap is still computed from the actual mask, never
+  guessed, which is the honesty rule that binds here.
+
+### Cost and reproducibility
+
+- `python3 backend/build_dataset.py` now includes a dipy affine registration for the
+  tumor case, about 6 to 7 minutes on this machine (one-time offline precompute; the
+  labelmap itself is cached after the first build). `dipy` is added to
+  `backend/requirements.txt`. Nothing new runs at app runtime.
+
+### Deferred (unchanged owners)
+
+- **Stroke case (Tabeen).** The ATLAS v2.0 encrypted tarball is downloading and the
+  decryption key is in hand. Once extracted, the masks are already MNI152, so it is
+  `compute_region_mappings(..., register=False)` plus a `build_stroke()` mirroring
+  `build_tumor()` and wiring `ischemic-stroke.case_ids`. No new overlap code.
+- **Detailing meshes and region / disorder prose** stand as previously logged.
+
 ## 2026-07-23 Backend session 1: Alzheimer's atrophy pair (OASIS-1)
 
 Branch: `data/alzheimers-atrophy`. Owner: Tabeen. First real backend increment
