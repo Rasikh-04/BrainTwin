@@ -17,7 +17,9 @@
     "name": "Ischemic stroke",
     "category": "structural",
     "evidence_renderer": "lesion-overlay",
-    "case_ids": [],
+    "case_ids": [
+      "atlas-001"
+    ],
     "description": "NEEDS_SOURCE",
     "description_source": null,
     "typical_affected_regions": [],

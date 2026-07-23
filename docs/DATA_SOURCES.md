@@ -28,13 +28,17 @@ Two access paths:
 
 For the POC take five to ten cases, not the whole set.
 
-## Stroke: ATLAS v2.0
+## Stroke: ATLAS
 
-What it gives you: T1-weighted MRIs with manually segmented lesion masks (one mask file per subject covering all lesions), 655 public training cases. Critically, ATLAS provides a version normalized to MNI-152 standard space, which means a lesion mask can be intersected directly with a standard atlas to compute which regions it touches. That is the whole ballgame for grounded region mapping, and it is why stroke beats Parkinson's for this POC.
+What it gives you: T1-weighted MRIs with manually segmented lesion masks (one mask file per subject covering all lesions). ATLAS ships in two forms, and which one you have changes the pipeline, so check before building.
 
-Access: registration through the ENIGMA Stroke Recovery / NITRC route (fcon_1000.projects.nitrc.org/indi/retro/atlas.html) or via ICPSR. Grab the R2.0 public training split. Use the normalized (MNI) form so region overlap is trivial. The PALS tool from the ATLAS authors computes lesion overlap with regions of interest if you want a cross-check on your own overlap computation.
+Access: registration through the ENIGMA Stroke Recovery / NITRC route (fcon_1000.projects.nitrc.org/indi/retro/atlas.html) or via ICPSR. The download is one openssl-encrypted, base64-armoured tarball plus an emailed key. The PALS tool from the ATLAS authors computes lesion overlap with regions of interest if you want a cross-check on your own overlap computation.
 
-Stroke reuses the tumor renderer exactly: a base scan plus a mask overlay in Niivue, and region involvement computed from mask intersect atlas. Once the data is in hand, adding stroke is mostly a preprocessing and fixtures task, not new frontend work.
+What is actually in hand: the ATLAS 3.0 training split, raw form (`atlas3_training_raw.tar.gz`, 1453 subjects). Raw means native scanner space: every file is BIDS `space-orig`, the grids differ per subject, and the brain sits tens of mm off the MNI brain. It is not the MNI-normalized form. Eight subjects are kept under `data/raw/stroke/`; see `download/fetch_stroke.sh` for the decrypt and selective-extract recipe.
+
+Consequence for region mapping: a raw-release lesion mask cannot be intersected with the atlas directly. `build_stroke()` reads the BIDS `space-` entity off the filename and takes the registration path (the brain-extracted `desc-brain` T1w is affine-registered to MNI152, and the mask is warped with it), exactly as the tumor case does for BraTS. If you later obtain the MNI-normalized release, the same function detects it and skips registration; no code change.
+
+Stroke reuses the tumor renderer exactly: a base scan plus a mask overlay in Niivue, and region involvement computed from mask intersect atlas. Adding stroke is a preprocessing and fixtures task, not new frontend work.
 
 ## Epilepsy: CHB-MIT scalp EEG
 

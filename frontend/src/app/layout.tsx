@@ -16,7 +16,7 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "BrainTwin — atlas explorer",
   description:
-    "Explore a normal brain by region, then switch into a disorder or de-identified case and trace every highlighted region back to its source data. Pending expert review.",
+    "Explore a normal brain by region, then switch into a disorder or de-identified case and trace every highlighted region back to its source data. A research preview, not for clinical use.",
 };
 
 export default function RootLayout({

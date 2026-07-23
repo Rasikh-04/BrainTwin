@@ -27,13 +27,13 @@ export function DissectionBar() {
     parts.push(`${hiddenCount} region${hiddenCount > 1 ? "s" : ""} hidden`);
 
   return (
-    <div className="panel pointer-events-auto flex items-center gap-3 px-3 py-1.5">
+    <div className="panel anim-rise pointer-events-auto flex items-center gap-3 px-3 py-1.5">
       <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-pending" />
-      <span className="text-[11.5px] text-ink-muted">{parts.join(" · ")}</span>
+      <span className="t-ctl text-ink-muted">{parts.join(" · ")}</span>
       <button
         type="button"
         onClick={clearDissection}
-        className="rounded px-2 py-0.5 text-[11.5px] text-select transition-colors hover:bg-select/15"
+        className="t-ctl rounded px-2 py-0.5 text-select transition-colors hover:bg-select/15"
       >
         Reset model
       </button>

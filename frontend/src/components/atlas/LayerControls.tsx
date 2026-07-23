@@ -36,7 +36,7 @@ function LayerToggle({
           ? "Detailing mesh not loaded yet — see docs/ASSET_SOURCING.md"
           : `Toggle ${LAYER_LABELS[layer]} layer`
       }
-      className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-[11.5px] transition-colors ${
+      className={`t-ctl flex items-center gap-1.5 rounded px-2.5 py-1 transition-colors ${
         pending
           ? "cursor-not-allowed text-ink-faint/60"
           : active
@@ -56,7 +56,7 @@ function LayerToggle({
       />
       {LAYER_LABELS[layer]}
       {pending && (
-        <span className="ident text-[9px] uppercase tracking-wide text-ink-faint/70">
+        <span className="ident t-micro uppercase tracking-wide text-ink-faint/70">
           soon
         </span>
       )}
@@ -83,9 +83,9 @@ export function LayerControls() {
   const toggleRegionColorMode = useAtlasStore((s) => s.toggleRegionColorMode);
 
   return (
-    <div className="panel pointer-events-auto flex flex-col gap-1 p-1.5">
+    <div className="panel anim-rise pointer-events-auto flex flex-col gap-1 p-1.5">
       <div className="flex items-center gap-0.5">
-        <span className="ident px-1.5 text-[9px] uppercase tracking-[0.13em]">
+        <span className="ident t-micro px-1.5 uppercase tracking-[0.13em]">
           Brain
         </span>
         {BRAIN_LAYERS.map((layer) => (
@@ -96,7 +96,7 @@ export function LayerControls() {
           type="button"
           onClick={toggleGhostCortex}
           aria-pressed={ghostCortex}
-          className={`rounded px-2.5 py-1 text-[11.5px] transition-colors ${
+          className={`t-ctl rounded px-2.5 py-1 transition-colors ${
             ghostCortex
               ? "bg-select/15 text-select"
               : "text-ink-faint hover:bg-surface-2 hover:text-ink-muted"
@@ -109,7 +109,7 @@ export function LayerControls() {
           onClick={toggleRegionColorMode}
           aria-pressed={regionColorMode}
           title="Give every region its own colour for easy differentiation (visual aid only, no clinical meaning)"
-          className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-[11.5px] transition-colors ${
+          className={`t-ctl flex items-center gap-1.5 rounded px-2.5 py-1 transition-colors ${
             regionColorMode
               ? "bg-select/15 text-select"
               : "text-ink-faint hover:bg-surface-2 hover:text-ink-muted"
@@ -129,7 +129,7 @@ export function LayerControls() {
       </div>
 
       <div className="flex items-center gap-0.5 border-t border-line/60 pt-1">
-        <span className="ident px-1.5 text-[9px] uppercase tracking-[0.13em]">
+        <span className="ident t-micro px-1.5 uppercase tracking-[0.13em]">
           Detailing
         </span>
         {DETAIL_LAYERS.map((layer) => (

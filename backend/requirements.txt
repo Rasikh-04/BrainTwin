@@ -7,3 +7,4 @@ nilearn
 pillow
 pygltflib          # OBJ -> glb with one named node per region
 fast-simplification # mesh decimation to keep the atlas light in the browser
+dipy               # BraTS SRI24 -> MNI152 affine registration for lesion overlap (no FreeSurfer)

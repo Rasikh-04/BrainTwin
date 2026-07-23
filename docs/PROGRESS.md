@@ -5,6 +5,192 @@ landed, what is deferred and who owns it, and the risks to keep in view. It is
 not a spec (the specs are `docs/DATA_CONTRACT.md` and `docs/MEDICAL_ACCURACY.md`);
 it is the shared state of the build.
 
+## 2026-07-24 Frontend session 7: UI polish, honest atrophy captions, research-preview framing
+
+Branch: `data/alzheimers-atrophy` (frontend work committed alongside the backend
+stroke pipeline, since both halves' uncommitted work already shared this branch).
+Owner: Abdul Mannan (Rasikh-04). A polish and honesty pass over the built two-step
+UI plus two correctness fixes. Typecheck, lint, and the 31 unit tests are green.
+
+### What landed
+
+- **Atrophy-pair caption honesty.** The Alzheimer's viewer labelled its two panels
+  "Baseline" and "Follow-up", which reads as one patient scanned over time. The
+  wired OASIS case is a cross-subject comparison of two different de-identified
+  subjects (a CDR 0 reference vs a CDR 2 case) using modulated GM VBM maps, not a
+  longitudinal pair. Panels are now "Reference" and "Case", and the viewer prints
+  the case's own caveat pulled verbatim from the mappings' shared provenance
+  (data-driven, never authored in the component; shown only when the data carries
+  one shared string). Closes the frontend honesty nit backend session 1 flagged.
+- **Research-preview framing.** The mandated pending-review posture (golden rule 4)
+  is kept in full: the persistent banner, the NEEDS_SOURCE placeholders, the
+  pending hue, and `review_status` all stay. Only the wording changed, from
+  "pending expert review / unreviewed" to a research-preview, not-for-clinical-use
+  register that reads as deliberate rigor rather than unfinished software.
+- **Fix `react-hooks/set-state-in-effect` in NiivueMount.** The retry counter now
+  resets during render (React's adjust-state-on-prop-change pattern) instead of in
+  an effect, so lint is clean.
+- **A ui-ux-pro-max visual pass** across the atlas and evidence chrome.
+
+### Deferred (unchanged owners)
+
+- **Detailing meshes (veins / arteries / nerves)** stay disabled "soon". The
+  download script fetches source `.blend` / `.obj` only; the Blender export and
+  MNI alignment are a human task per `docs/ASSET_SOURCING.md`, not scriptable here.
+
+## 2026-07-23 Backend session 3: stroke pipeline written, ready to run on extract
+
+Branch: `data/alzheimers-atrophy`. Owner: Tabeen. The ATLAS v2.0 download was still in
+flight this session, so the goal was to land everything the stroke case needs except the
+data itself, so the next run (once the tarball is decrypted and extracted) is just
+`python3 backend/build_dataset.py` plus a verify. No new frontend work: stroke reuses the
+lesion-overlay renderer, and the case appears in the study list automatically once wired.
+
+### What landed
+
+- **`build_stroke()` in `backend/build_dataset.py`**, mirroring `build_tumor()` but with
+  NO registration. ATLAS v2.0 masks are already in MNI152 space, so involvement is
+  `compute_region_mappings(register=False)`: the lesion mask is intersected with the same
+  DK+aseg labelmap directly. Region involvement is computed from the actual mask, never
+  guessed (root CLAUDE.md golden rules 1-2), same honesty contract as tumor.
+- **Robust ATLAS discovery.** `_find_atlas_stroke_cases()` recursively globs the extracted
+  tree for the BIDS-normalized lesion masks
+  (`*_space-MNI152NLin2009aSym_label-L_desc-T1lesion_mask.nii.gz`) and pairs each with its
+  `_T1w` sibling, tolerant of whatever cohort/site nesting the archive extracts into, with
+  a looser `*mask.nii.gz` fallback for naming drift.
+- **Deterministic demo-case selection.** `select_stroke_case()` picks the subject whose
+  lesion voxel count is nearest a 15 cc target within a 2 to 80 cc window (tie-broken by
+  subject id), so the highlighted lesion is a legible territorial stroke, not a lacune that
+  lights up nothing or a near-hemisphere infarct that lights up everything.
+- **Grid handling that keeps the frontend overlay clean.** The frontend gets the ATLAS T1w
+  as `base.nii.gz` and the ATLAS mask on its native grid as `mask.nii.gz` (so the Niivue
+  overlay aligns exactly). The overlap math uses a separate copy nearest-neighbour
+  resampled onto the labelmap grid by world coordinates (both are MNI152; the specific
+  variant grid can differ by a fraction of a voxel). The resample is a no-op when grids
+  already match, and the method is stated in every mapping's provenance.
+- **Wiring.** `build_disorders()` now derives every disorder's `case_ids` from a single
+  dict (`cids` helper), and `main()` calls `build_stroke()` and passes its id through.
+  `anonymized_meta` is `{}` (ATLAS's public release ships no per-subject de-identified
+  age/sex we can cite, so nothing is invented); `report_summary` stays `NEEDS_SOURCE`.
+
+### Verified, not assumed
+
+- Import + compile clean. The graceful-skip path was run against the real (empty)
+  `data/raw/stroke`: `build_stroke()` returns `None`, prints why, and `build_dataset.py`
+  still builds the other three cases unchanged, so the frontend is not blocked today.
+- The full success path was run against a synthetic ATLAS-shaped fixture (two subjects in
+  nested BIDS `Training/<cohort>/sub-*/ses-1/anat/` dirs, lesions painted from real
+  labelmap regions on the MNI152 grid): discovery found both subjects, selection picked
+  the in-range lesion over the oversized one, `register=False` overlap passed the grid
+  check and produced correct `overlap_voxels` / `overlap_fraction_of_region` with
+  `role: primary`, provenance carried the ATLAS source note, and the resample branch
+  produced a grid-matched mask. Outputs were redirected to a temp dir, so nothing leaked
+  into the repo.
+
+### What the next (post-download) session does
+
+1. Decrypt the tarball with `data/raw/stroke/key.txt` and extract under `data/raw/stroke/`.
+2. Run `python3 backend/build_dataset.py` (about 6 to 7 min, mostly the tumor registration;
+   stroke itself is a short scan-and-intersect).
+3. Sanity-check the printed `stroke:` line (which subject, lesion cc, regions touched,
+   primary set) is anatomically coherent for the selected lesion, then
+   `python3 contract/validate.py --check-assets`.
+
+If the extracted ATLAS filenames differ from the assumed BIDS pattern, only
+`_find_atlas_stroke_cases()` needs a glob tweak; nothing else changes.
+
+### Deferred (unchanged owners)
+
+- **Detailing meshes (veins, arteries, nerves).** Still a sourcing task, not code: needs
+  external `.blend` assets (Z-Anatomy / BodyParts3D) exported and aligned into MNI space
+  (`backend/download_detailing_assets.sh` exists). Not startable this session; no source
+  assets are present.
+- **Region / disorder prose (neuro review).** Held at `NEEDS_SOURCE` by design; a human
+  sources cited text, code never writes anatomy.
+
+## 2026-07-23 Backend session 2: tumor region involvement, computed from the mask
+
+Branch: `data/alzheimers-atrophy`. Owner: Tabeen. The flagship backend increment and
+the one the frontend has been data-blocked on the longest: `brats-001` showed
+"Region involvement not yet computed" because its `region_mappings` was empty. It now
+carries real, computed involvement, so the two-step demo finally proves point 1
+(mapping is real, not decorative) for the tumor pillar, not just for the cited
+Alzheimer's pattern. Contract validator passes structurally and with `--check-assets`.
+
+### What landed
+
+- **A DK+aseg parcellation as a volume, built from our own meshes**
+  (`backend/mni_parcellation.py`). To intersect a lesion with named regions we need
+  the atlas as a labelled volume in a shared space. Rather than run FreeSurfer
+  recon-all per patient (unnecessary, and the user confirmed the FreeSurfer download
+  is not needed), we voxelize the SAME Desikan-Killiany / aseg surface meshes that
+  already define `regions.json` and the glbs onto the MNI152 1mm grid: each brain
+  voxel (inside the MNI152 brain mask) is assigned to the anatomically nearest region
+  surface (nearest-vertex / Voronoi). Because the labelmap is built from those meshes,
+  every voxel label IS a `regions.json` id, so the case-to-atlas join cannot silently
+  drift. All 100 regions are represented; the 25 solid gray-matter subcortical
+  structures land on themselves at their own centroid to within 3 mm, and the only
+  "misses" are hollow/nested structures (ventricles, cerebellar white matter) whose
+  geometric centroid legitimately sits inside the neighbour they wrap. Cached under
+  `data/derived/` (git-ignored, regenerable in about 7 s).
+- **Lesion-to-atlas overlap** (`backend/lesion_overlap.py`). BraTS is in SRI24 voxel
+  space, so the skull-stripped T1ce is affine-registered to the (brain-masked) MNI152
+  template with dipy (mutual information; no FreeSurfer, no FSL), and the segmentation
+  mask is resampled with nearest-neighbour into MNI152. It is then intersected with
+  the labelmap: for every region the lesion touches we record `overlap_voxels` and
+  `overlap_fraction_of_region`, and mark `role: primary` at or above a 0.10 fraction
+  (the documented threshold), `secondary` below. Sub-10-voxel border specks from
+  resampling are dropped. The same function serves stroke with `register=False`, since
+  ATLAS v2.0 masks are already in MNI152.
+- **`brats-001` now maps to 27 regions** (18 primary) computed from the mask, wired
+  through `build_tumor()`. 99.8% of the lesion's MNI voxels fall inside a labelled
+  region. Every mapping is `evidence_type: "segmentation_mask"` with a real
+  `overlap_metric` and a provenance string that states the registration, the
+  approximate voxel parcellation, the threshold, and the pending-review status. No
+  region is added because a glioma "usually" involves it (root CLAUDE.md golden rules
+  1-2); the set comes only from the intersection.
+
+### Verified, not assumed
+
+- The involved set is anatomically coherent, which is the real check that
+  registration and parcellation agree: BraTS2021_00000 comes out as a large left
+  frontal "butterfly" glioma. Left anterior cingulate is 98% and 73% engulfed, with
+  left caudate, putamen, pallidum, accumbens, corpus callosum (anterior, mid-anterior,
+  central), left orbito / middle / superior frontal, pars triangularis / opercularis,
+  and insula, plus a small contralateral right anterior cingulate reached across the
+  corpus callosum. The regions cluster in one tight neighbourhood around a single
+  lesion, not scattered across the brain, which is what a correct intersection must
+  produce.
+
+### Reviewable choices (for the neuro pass, all disclosed in the data)
+
+- **Lesion extent = necrotic core + edema + enhancing tumor (labels 1, 2, 4) merged.**
+  This counts peritumoral edema as "affected", which is the broad reading; a
+  tumor-core-only reading (labels 1, 4) is a one-line change (`lesion_values=(1, 4)`).
+  The merge is stated in every mapping's provenance and the three sub-labels stay
+  distinct in `mask_labels` and the Niivue overlay, so a reviewer sees exactly what
+  was counted. Left as the broad reading pending expert review.
+- **The parcellation and the affine registration are approximate** and labelled as
+  such in provenance. Affine (not diffeomorphic) registration and nearest-vertex
+  parcellation are POC-grade; a SyN refine or a published volumetric DKT atlas would
+  tighten region borders. The overlap is still computed from the actual mask, never
+  guessed, which is the honesty rule that binds here.
+
+### Cost and reproducibility
+
+- `python3 backend/build_dataset.py` now includes a dipy affine registration for the
+  tumor case, about 6 to 7 minutes on this machine (one-time offline precompute; the
+  labelmap itself is cached after the first build). `dipy` is added to
+  `backend/requirements.txt`. Nothing new runs at app runtime.
+
+### Deferred (unchanged owners)
+
+- **Stroke case (Tabeen).** The ATLAS v2.0 encrypted tarball is downloading and the
+  decryption key is in hand. Once extracted, the masks are already MNI152, so it is
+  `compute_region_mappings(..., register=False)` plus a `build_stroke()` mirroring
+  `build_tumor()` and wiring `ischemic-stroke.case_ids`. No new overlap code.
+- **Detailing meshes and region / disorder prose** stand as previously logged.
+
 ## 2026-07-23 Backend session 1: Alzheimer's atrophy pair (OASIS-1)
 
 Branch: `data/alzheimers-atrophy`. Owner: Tabeen. First real backend increment

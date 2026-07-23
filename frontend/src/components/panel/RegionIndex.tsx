@@ -52,7 +52,7 @@ export function RegionIndex() {
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search regions"
           aria-label="Search atlas regions"
-          className="w-full rounded-md border border-line bg-surface-0 px-2.5 py-1.5 text-[12.5px] text-ink placeholder:text-ink-faint focus:border-select/60 focus:outline-none"
+          className="t-body w-full rounded-md border border-line bg-surface-0 px-2.5 py-1.5 text-ink placeholder:text-ink-faint focus:border-select/60 focus:outline-none"
         />
         <p className="ident mt-2">
           {total} of {regions.length} regions
@@ -61,7 +61,7 @@ export function RegionIndex() {
 
       <div className="scroll-thin flex-1 overflow-y-auto py-1">
         {total === 0 && (
-          <p className="px-3 py-6 text-center text-[12px] text-ink-faint">
+          <p className="t-body px-3 py-6 text-center text-ink-faint">
             No region matches that search.
           </p>
         )}
@@ -69,7 +69,7 @@ export function RegionIndex() {
         {(["cortical", "subcortical"] as const).map((group) =>
           grouped[group].length === 0 ? null : (
             <section key={group}>
-              <h3 className="sticky top-0 z-10 bg-surface-1/95 px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.13em] text-ink-faint backdrop-blur">
+              <h3 className="t-tag sticky top-0 z-10 bg-surface-1/95 px-3 py-1.5 font-medium uppercase tracking-[0.13em] text-ink-faint backdrop-blur">
                 {group}
               </h3>
               <ul>
@@ -89,7 +89,7 @@ export function RegionIndex() {
                             : "border-transparent text-ink-muted hover:bg-surface-2/60 hover:text-ink"
                         }`}
                       >
-                        <span className="truncate text-[12.5px]">
+                        <span className="t-body truncate">
                           {region.name}
                         </span>
                         <span className="ident ml-auto shrink-0">

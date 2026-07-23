@@ -46,16 +46,16 @@ export function DisorderList({
             disabled={!hasCase}
             aria-pressed={isActive}
             onClick={() => hasCase && onSelect(caseId)}
-            className={`shrink-0 rounded-md border px-3 py-2 text-left transition-colors md:w-full ${
+            className={`shrink-0 transform-gpu rounded-md border px-3 py-2 text-left transition-[color,background-color,border-color,transform] duration-200 md:w-full ${
               isActive
                 ? "border-select/50 bg-select/15"
                 : hasCase
-                  ? "border-line bg-surface-0 hover:border-line-strong"
+                  ? "border-line bg-surface-0 hover:-translate-y-px hover:border-line-strong"
                   : "cursor-not-allowed border-dashed border-line bg-transparent opacity-60"
             }`}
           >
             <span
-              className={`block text-[12.5px] font-medium ${
+              className={`t-body block font-medium ${
                 isActive ? "text-select" : "text-ink"
               }`}
             >

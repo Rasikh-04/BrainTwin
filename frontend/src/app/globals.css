@@ -61,6 +61,25 @@
   --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
 
   --radius-panel: 10px;
+
+  /*
+   * Fluid type scale. Every step is one clamp() expressed in rem, so it tracks
+   * the fluid root font-size below and, through it, the viewport. The rem
+   * numbers are read at the 16px baseline (a ~1440px window), which is the size
+   * the design was tuned at — so on a typical laptop nothing moves, while a
+   * cramped Fedora/GNOME window steps everything down together and a wide
+   * browser lets it breathe. Nine steps, one per size the UI already used, so
+   * the existing hierarchy is preserved exactly rather than re-flattened.
+   */
+  --t-micro: 0.5625rem;   /* 9px  — micro tags: "soon", demo pill            */
+  --t-tag: 0.625rem;      /* 10px — uppercase section labels                 */
+  --t-fine: 0.6875rem;    /* 11px — fine print, meta labels, idents          */
+  --t-ctl: 0.71875rem;    /* 11.5px — controls, buttons                      */
+  --t-body: 0.78125rem;   /* 12.5px — body copy, list rows                   */
+  --t-read: 0.8125rem;    /* 13px — reading passages (sourced fields)        */
+  --t-brand: 0.84375rem;  /* 13.5px — wordmark                               */
+  --t-head: 0.9375rem;    /* 15px — panel / case headings                    */
+  --t-head-lg: 1rem;      /* 16px — region title, dialog title               */
 }
 
 /* --- Clinical dark (alternate) --- */
@@ -97,6 +116,19 @@ body {
   height: 100%;
 }
 
+/*
+ * Fluid root font-size. Because it is authored in rem (against the browser /
+ * user base) plus a vw term, it both respects a reader who has bumped their
+ * default size AND adapts to the window: ~15px in a tight ~1150px window,
+ * 16px at ~1440px, up to 17px past ~1700px. Every rem-based size in the app —
+ * type scale, Tailwind spacing, control heights — rides on this one value, so
+ * the whole instrument scales as one piece instead of feeling off between a
+ * small Fedora window and a maximised browser.
+ */
+html {
+  font-size: clamp(0.9375rem, 0.7rem + 0.34vw, 1.0625rem);
+}
+
 body {
   background: var(--color-void);
   color: var(--color-ink);
@@ -105,7 +137,24 @@ body {
   overflow: hidden;
   overscroll-behavior: none;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
+
+/*
+ * Type scale utilities. One class per step; each just sets the fluid font-size
+ * token (line-height and colour stay with Tailwind's leading-* / text-* so
+ * per-element intent is untouched). These replace the hard-coded text-[Npx]
+ * arbitrary values, which were the only thing in the UI that did not scale.
+ */
+.t-micro { font-size: var(--t-micro); }
+.t-tag { font-size: var(--t-tag); }
+.t-fine { font-size: var(--t-fine); }
+.t-ctl { font-size: var(--t-ctl); }
+.t-body { font-size: var(--t-body); }
+.t-read { font-size: var(--t-read); }
+.t-brand { font-size: var(--t-brand); }
+.t-head { font-size: var(--t-head); line-height: 1.3; }
+.t-head-lg { font-size: var(--t-head-lg); line-height: 1.25; }
 
 /*
  * Identifiers (region_id, case_id, PMIDs, overlap numbers) are always
@@ -114,7 +163,7 @@ body {
  */
 .ident {
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
+  font-size: var(--t-fine);
   letter-spacing: 0.02em;
   color: var(--color-ink-faint);
 }
@@ -125,6 +174,14 @@ body {
   border: 1px solid var(--color-line);
   border-radius: var(--radius-panel);
   box-shadow: var(--panel-shadow);
+  /*
+   * Layout + style containment walls the panel's internal work off from the
+   * rest of the page, so a hover or list re-flow inside a floating tool cannot
+   * invalidate layout out on the stage. (Deliberately not `paint`, which would
+   * clip the soft shadow.) The WebGL canvas keeps its own compositor layer and
+   * only repaints on its own animation frame, so chrome motion never taxes it.
+   */
+  contain: layout style;
 }
 
 /*
@@ -141,6 +198,10 @@ body {
       var(--stage-2) 68%,
       var(--stage-3) 100%
     );
+  /* Own stacking context: the floating tools composite above the canvas as
+     independent layers, so their entrance/hover motion never forces the WebGL
+     surface to repaint. */
+  isolation: isolate;
 }
 
 /*
@@ -161,6 +222,51 @@ body {
 .scroll-thin {
   scrollbar-width: thin;
   scrollbar-color: var(--color-line-strong) transparent;
+}
+
+/*
+ * Motion. Entrances only, one-shot, on transform/opacity alone so they run on
+ * the compositor and never touch the main-thread layout the canvas shares.
+ * ease-out on enter (matter arriving, not leaving); durations 180–260ms.
+ * All of it is switched off by the prefers-reduced-motion block below.
+ */
+@keyframes bt-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes bt-rise {
+  from { opacity: 0; transform: translate3d(0, 6px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes bt-pop {
+  from { opacity: 0; transform: translate3d(0, 10px, 0) scale(0.985); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+@keyframes bt-slide-left {
+  from { transform: translate3d(-100%, 0, 0); }
+  to { transform: translate3d(0, 0, 0); }
+}
+@keyframes bt-slide-right {
+  from { transform: translate3d(100%, 0, 0); }
+  to { transform: translate3d(0, 0, 0); }
+}
+
+.anim-fade { animation: bt-fade 180ms ease-out both; }
+.anim-rise { animation: bt-rise 220ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.anim-pop { animation: bt-pop 240ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.anim-drawer-left { animation: bt-slide-left 260ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.anim-drawer-right { animation: bt-slide-right 260ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/*
+ * Visible keyboard focus. Authored with :where() so it carries zero
+ * specificity and any component's own focus styling still wins — it is a floor,
+ * not an override — but a focus ring is never absent (accessibility floor). It
+ * only shows for keyboard/AT focus, so mouse users see nothing extra.
+ */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-select);
+  outline-offset: 2px;
+  border-radius: 5px;
 }
 
 @media (prefers-reduced-motion: reduce) {

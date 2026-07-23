@@ -66,7 +66,7 @@ export function EvidenceExplorer() {
   const hasAnyCase = disorders.some((d) => d.case_ids.length > 0);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col md:flex-row">
+    <div className="anim-fade flex min-h-0 flex-1 flex-col md:flex-row">
       <div className="shrink-0 border-b border-line bg-surface-1 md:w-56 md:border-b-0 md:border-r">
         <DisorderList
           disorders={disorders}
@@ -78,17 +78,17 @@ export function EvidenceExplorer() {
       {error ? (
         <div className="flex min-h-0 flex-1 items-center justify-center p-8 text-center">
           <div className="max-w-sm space-y-1.5">
-            <p className="text-[13px] font-medium text-ink">
+            <p className="t-read font-medium text-ink">
               Could not load this case
             </p>
-            <p className="text-[12px] leading-relaxed text-ink-muted">
+            <p className="t-body leading-relaxed text-ink-muted">
               {error}
             </p>
           </div>
         </div>
       ) : !hasAnyCase ? (
         <div className="flex min-h-0 flex-1 items-center justify-center p-8 text-center">
-          <p className="max-w-sm text-[12.5px] leading-relaxed text-ink-muted">
+          <p className="t-body max-w-sm leading-relaxed text-ink-muted">
             No demo cases are wired yet. Cases appear here as their datasets are
             processed.
           </p>

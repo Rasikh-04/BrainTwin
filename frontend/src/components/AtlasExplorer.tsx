@@ -140,8 +140,8 @@ export function AtlasExplorer() {
   if (loadError) {
     return (
       <main className="flex h-dvh flex-col items-center justify-center gap-3 px-6 text-center">
-        <h1 className="text-[15px] text-ink">Could not load the atlas catalog</h1>
-        <p className="max-w-md text-[12.5px] leading-relaxed text-ink-muted">
+        <h1 className="t-head text-ink">Could not load the atlas catalog</h1>
+        <p className="t-body max-w-md leading-relaxed text-ink-muted">
           {loadError}
         </p>
         <p className="ident max-w-md">

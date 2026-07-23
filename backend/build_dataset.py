@@ -31,6 +31,7 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parent.parent
 RAW = ROOT / "data" / "raw"
+DERIVED = ROOT / "data" / "derived"
 FIXTURES = ROOT / "contract" / "fixtures"
 PUBLIC_DATA = ROOT / "frontend" / "public" / "data"
 ASSETS = ROOT / "frontend" / "public" / "assets"
@@ -39,6 +40,14 @@ CORTICAL_OBJ = RAW / "meshes" / "pial_DK_obj"
 SUBCORTICAL_OBJ = RAW / "meshes" / "subcortical_obj"
 OASIS_DIR = RAW / "alzheimers" / "oasis1"
 OASIS_CSV = OASIS_DIR / "oasis_cross-sectional.csv"
+STROKE_DIR = RAW / "stroke"
+
+# Deterministic ATLAS v2.0 stroke-case selection: prefer a lesion big enough to touch
+# several regions (a visible territorial stroke) but not a whole-hemisphere infarct, so
+# the demo highlight is legible. Nearest-to-target voxel count, tie-broken by subject id.
+STROKE_TARGET_VOXELS = 15000   # ~15 cc at 1mm; a solid, clearly territorial lesion
+STROKE_MIN_VOXELS = 2000       # drop tiny lacunes that highlight ~nothing
+STROKE_MAX_VOXELS = 80000      # drop near-hemisphere infarcts that light up everything
 
 # Decimation: keep the atlas light enough for a laptop/phone. Faces kept = 1 - reduction.
 CORTICAL_REDUCTION = 0.75
@@ -274,8 +283,27 @@ def build_tumor(case_id="brats-001", src_case="BraTS2021_00000") -> dict:
     src = RAW / "tumor" / src_case
     out = ASSETS / "cases" / case_id
     out.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(src / f"{src_case}_t1ce.nii.gz", out / "base.nii.gz")
-    shutil.copyfile(src / f"{src_case}_seg.nii.gz", out / "mask.nii.gz")
+    base_src = src / f"{src_case}_t1ce.nii.gz"
+    mask_src = src / f"{src_case}_seg.nii.gz"
+    shutil.copyfile(base_src, out / "base.nii.gz")
+    shutil.copyfile(mask_src, out / "mask.nii.gz")
+
+    # Grounded region involvement (root CLAUDE.md golden rules 1-2): computed from the
+    # actual segmentation mask intersected with the DK+aseg atlas, never guessed. BraTS
+    # is in SRI24 space, so lesion_overlap registers it to MNI152 (dipy affine, NOT
+    # FreeSurfer) before the intersection. Labels 1/2/4 (necrotic/edema/enhancing) are
+    # merged as the lesion extent.
+    from lesion_overlap import compute_region_mappings
+
+    mappings, qc = compute_region_mappings(
+        base_src, mask_src, register=True, lesion_values=(1, 2, 4),
+        source_note="glioma extent = segmentation labels 1 (necrotic core), 2 (edema), "
+                    "4 (enhancing tumor) merged.",
+    )
+    print(f"  overlap: {qc['regions_touched']} regions touched, "
+          f"primary={qc['primary']} "
+          f"({qc['lesion_voxels_in_labelled_brain']}/{qc['lesion_voxels_in_mni']} "
+          f"lesion voxels inside a labelled region)")
 
     case = {
         "case_id": case_id,
@@ -290,11 +318,7 @@ def build_tumor(case_id="brats-001", src_case="BraTS2021_00000") -> dict:
             "mask": f"/assets/cases/{case_id}/mask.nii.gz",
             "mask_labels": {"1": "necrotic core", "2": "edema", "4": "enhancing tumor"},
         },
-        # Left EMPTY on purpose. Real mask-to-DK-atlas overlap needs BraTS registered
-        # into the atlas space; that is the backend registration pipeline, not a guess.
-        # TODO(data): compute region_mappings from mask.nii.gz intersect DK atlas in a
-        # shared space; mark role primary when overlap_fraction_of_region >= 0.10.
-        "region_mappings": [],
+        "region_mappings": mappings,
         "review_status": "pending",
     }
     write_json_both(f"cases/{case_id}.json", case)
@@ -500,16 +524,216 @@ def build_alzheimers(case_id="oasis-001") -> dict:
     return case
 
 
+# --------------------------------------------------------------------------- #
+# stroke (ATLAS v2.0) -- same lesion-overlay path as tumor, no registration
+# --------------------------------------------------------------------------- #
+
+def _stroke_t1_for_mask(mask_path: Path) -> Path | None:
+    """The T1w sibling of an ATLAS lesion mask, if present.
+
+    ATLAS is BIDS: the mask sits beside its T1w in the same anat/ dir, in whichever space
+    the release ships. The exact-name rewrite covers the normalized release
+    (..._space-MNI152NLin2009aSym_label-L_desc-T1lesion_mask.nii.gz next to
+    ..._space-MNI152NLin2009aSym_T1w.nii.gz); the glob fallback covers the raw release,
+    whose T1w carries an extra entity (..._space-orig_desc-brain_T1w.nii.gz).
+    """
+    exact = mask_path.parent / re.sub(
+        r"(_label-[^_]+)?(_desc-[^_]+)?_mask\.nii\.gz$", "_T1w.nii.gz", mask_path.name)
+    if exact.exists():
+        return exact
+    siblings = sorted(mask_path.parent.glob("*_T1w.nii.gz"))
+    return siblings[0] if siblings else None
+
+
+def _find_atlas_stroke_cases() -> list[tuple[str, Path, Path]]:
+    """Discover extracted ATLAS subjects: (subject_id, t1w, mask).
+
+    Recursive glob tolerates whatever cohort/site nesting the archive extracts into. Both
+    releases match (the raw one is space-orig, the normalized one space-MNI152...); which
+    one it is decides the overlap path, and that is read per-file by _space_of_mask rather
+    than assumed here. The specific BIDS name is tried first, with a looser fallback for
+    naming drift.
+    """
+    masks = sorted(STROKE_DIR.rglob("*desc-T1lesion_mask.nii.gz"))
+    if not masks:
+        masks = sorted(p for p in STROKE_DIR.rglob("*mask.nii.gz")
+                       if "T1w" not in p.name)
+    cases = []
+    for m in masks:
+        sub = re.match(r"(sub-[A-Za-z0-9]+)", m.name)
+        t1 = _stroke_t1_for_mask(m)
+        if sub and t1 and t1.exists():
+            cases.append((sub.group(1), t1, m))
+    return cases
+
+
+def _space_of_mask(mask_path: Path) -> str:
+    """The BIDS `space-` entity of an ATLAS file: "MNI" only for the normalized release.
+
+    ATLAS ships two forms and they need opposite handling. The normalized release is
+    `space-MNI152NLin2009aSym` and can be intersected with the atlas directly; the raw
+    release is `space-orig` (native scanner space) and MUST be registered first. Reading
+    the entity off the filename keeps that decision in the data rather than in a constant
+    someone has to remember to flip when the download changes.
+    """
+    m = re.search(r"_space-([A-Za-z0-9]+)", mask_path.name)
+    space = m.group(1) if m else "unknown"
+    return "MNI" if space.upper().startswith("MNI") else space
+
+
+def select_stroke_case(cases: list[tuple[str, Path, Path]]) -> tuple[int, str, Path, Path]:
+    """Deterministically pick one demo case by lesion size. Returns (vol, sub, t1, mask)."""
+    import nibabel as nib
+
+    scored = []
+    for i, (sub, t1, m) in enumerate(cases):
+        vol = int(np.count_nonzero(np.asarray(nib.load(str(m)).dataobj)))
+        scored.append((vol, sub, t1, m))
+        if (i + 1) % 100 == 0:
+            print(f"  ...scanned {i + 1}/{len(cases)} lesion masks")
+    in_range = [s for s in scored if STROKE_MIN_VOXELS <= s[0] <= STROKE_MAX_VOXELS]
+    pool = in_range or scored
+    return min(pool, key=lambda s: (abs(s[0] - STROKE_TARGET_VOXELS), s[1]))
+
+
+def _resample_mask_to_labelgrid(mask_path: Path, labels_nii: Path, out_path: Path) -> str:
+    """Put an already-MNI ATLAS mask on the exact labelmap grid; returns a provenance note.
+
+    Only for the MNI-normalized ATLAS release. Such a mask is already in MNI152 space, but
+    the specific MNI152 variant grid may differ from our labelmap's by a fraction of a
+    voxel, and _load_mask_in_mni requires an exact grid match. We align by world coordinates
+    (nearest-neighbour, so labels are preserved) onto the labelmap grid. When the grids
+    already match this is a no-op copy. This resampled mask is used ONLY for the overlap
+    math; the frontend still gets the ATLAS mask on its native T1w grid.
+    """
+    import nibabel as nib
+
+    labels_img = nib.load(str(labels_nii))
+    mask_img = nib.load(str(mask_path))
+    same = (tuple(mask_img.shape[:3]) == tuple(labels_img.shape[:3])
+            and np.allclose(mask_img.affine, labels_img.affine, atol=1e-3))
+    if same:
+        data = np.asarray(mask_img.dataobj)
+        note = "already on the MNI152 labelmap grid (no resampling)"
+    else:
+        from nilearn.image import resample_to_img
+        res = resample_to_img(mask_img, labels_img, interpolation="nearest")
+        data = np.asarray(res.dataobj)
+        note = ("nearest-neighbour resampled onto the MNI152 labelmap grid by world "
+                "coordinates (both are MNI152; grids differ slightly between MNI152 variants)")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    nib.save(nib.Nifti1Image(data.astype(np.int16), labels_img.affine), str(out_path))
+    return note
+
+
+def build_stroke(case_id="atlas-001") -> dict | None:
+    """Ischemic-stroke case from ATLAS 3.0 -- the same lesion-overlay path as tumor.
+
+    The release in hand is "ATLAS3_Training_Raw", whose T1w and lesion masks are in NATIVE
+    scanner space (BIDS `space-orig`), NOT the MNI-normalized ATLAS release. So this takes
+    the same registration path as tumor: the brain-extracted `desc-brain` T1w is affine-
+    registered to MNI152 with dipy and the mask is warped along with it, before being
+    intersected with the DK+aseg labelmap. Region involvement is COMPUTED from the actual
+    lesion mask (root CLAUDE.md golden rules 1-2), never guessed from what a stroke
+    "usually" hits.
+
+    Do NOT switch this to register=False without checking the release: for these native
+    images the brain sits tens of mm off the MNI brain, so a world-coordinate reslice
+    alone produces confidently wrong regions. See _space_of_mask.
+
+    Returns None (and leaves ischemic-stroke unwired) when the ATLAS download has not been
+    extracted yet, so `python3 backend/build_dataset.py` still runs today. Once the
+    encrypted tarball is decrypted (key in data/raw/stroke/key.txt) and extracted under
+    data/raw/stroke/, re-running wires the case with no code change.
+    """
+    if not STROKE_DIR.exists():
+        return None
+    cases = _find_atlas_stroke_cases()
+    if not cases:
+        print("stroke: no extracted ATLAS data under data/raw/stroke yet; skipping "
+              "(ischemic-stroke stays unwired). Decrypt + extract the download, then "
+              "re-run build_dataset.py.")
+        return None
+
+    print(f"stroke: {len(cases)} ATLAS subject(s) found; selecting a demo lesion")
+    vol, sub, t1_src, mask_src = select_stroke_case(cases)
+    print(f"  selected {sub}: lesion = {vol} voxels (~{vol / 1000:.1f} cc), from {mask_src.name}")
+
+    out = ASSETS / "cases" / case_id
+    out.mkdir(parents=True, exist_ok=True)
+    # Ship the ATLAS T1w + its mask on that same native grid, so the Niivue overlay in the
+    # frontend aligns exactly. Only the overlap math needs MNI.
+    shutil.copyfile(t1_src, out / "base.nii.gz")
+    shutil.copyfile(mask_src, out / "mask.nii.gz")
+
+    from lesion_overlap import compute_region_mappings
+
+    # Which ATLAS release this is decides how the mask reaches MNI, so read it off the
+    # file rather than assuming. Raw (space-orig) must be registered; only the normalized
+    # release can be intersected directly, and then only after a grid-matching reslice.
+    space = _space_of_mask(mask_src)
+    lesion_note = (f"stroke lesion = ATLAS manual lesion segmentation ({sub}), "
+                   f"BIDS space-{space.lower()}.")
+    if space == "MNI":
+        print("  mask space: MNI-normalized release -> no registration")
+        from mni_parcellation import LABELS_NII
+
+        grid_mask = DERIVED / f"{case_id}_mask_on_labelgrid.nii.gz"
+        grid_note = _resample_mask_to_labelgrid(mask_src, LABELS_NII, grid_mask)
+        overlap_base, overlap_mask = grid_mask, grid_mask  # base unused when register=False
+        source_note = f"{lesion_note} Mask {grid_note}."
+        moving_space = ""
+    else:
+        print(f"  mask space: {space} (native scanner) -> registering T1w to MNI152")
+        overlap_base, overlap_mask = t1_src, mask_src
+        source_note = (f"{lesion_note} The Training Raw release is not MNI-normalized, so "
+                       f"the lesion reaches atlas space via its own T1w, not by assumption.")
+        moving_space = "ATLAS 3.0 native scanner space (brain-extracted T1w)"
+
+    mappings, qc = compute_region_mappings(
+        overlap_base, overlap_mask,
+        register=space != "MNI", lesion_values=None,
+        moving_space=moving_space, source_note=source_note,
+    )
+    print(f"  overlap: {qc['regions_touched']} regions touched, primary={qc['primary']} "
+          f"({qc['lesion_voxels_in_labelled_brain']}/{qc['lesion_voxels_in_mni']} "
+          f"lesion voxels inside a labelled region)")
+
+    case = {
+        "case_id": case_id,
+        "disorder_id": "ischemic-stroke",
+        "source_dataset": "ATLAS 3.0",
+        # ATLAS's public release ships no per-subject de-identified age/sex we can cite,
+        # so we invent nothing (root CLAUDE.md golden rule 1; backend CLAUDE.md meta rule).
+        "anonymized_meta": {},
+        "report_summary": "NEEDS_SOURCE",  # a clinical read is not ours to write; TODO(neuro-review)
+        "evidence": {
+            "renderer": "lesion-overlay",
+            "base": f"/assets/cases/{case_id}/base.nii.gz",
+            "mask": f"/assets/cases/{case_id}/mask.nii.gz",
+            "mask_labels": {"1": "stroke lesion"},
+        },
+        "region_mappings": mappings,
+        "review_status": "pending",
+    }
+    write_json_both(f"cases/{case_id}.json", case)
+    return case
+
+
 def build_disorders(case_ids: dict):
+    def cids(key: str) -> list[str]:
+        v = case_ids.get(key)
+        return [v] if v else []  # empty until that disorder's case is built
+
     disorders = [
         {"disorder_id": "glioma", "name": "Glioma (brain tumor)", "category": "structural",
-         "evidence_renderer": "lesion-overlay", "case_ids": [case_ids["glioma"]]},
+         "evidence_renderer": "lesion-overlay", "case_ids": cids("glioma")},
         {"disorder_id": "ischemic-stroke", "name": "Ischemic stroke", "category": "structural",
-         "evidence_renderer": "lesion-overlay", "case_ids": []},  # ATLAS not yet downloaded
+         "evidence_renderer": "lesion-overlay", "case_ids": cids("ischemic-stroke")},
         {"disorder_id": "epilepsy", "name": "Epilepsy (seizure)", "category": "functional",
-         "evidence_renderer": "eeg", "case_ids": [case_ids["epilepsy"]]},
+         "evidence_renderer": "eeg", "case_ids": cids("epilepsy")},
         {"disorder_id": "alzheimers", "name": "Alzheimer's disease", "category": "neurodegenerative",
-         "evidence_renderer": "atrophy-pair", "case_ids": [case_ids["alzheimers"]]},
+         "evidence_renderer": "atrophy-pair", "case_ids": cids("alzheimers")},
     ]
     # Literature-level typical patterns (docs/MEDICAL_ACCURACY.md type 2). Only Alzheimer's
     # has a cited pattern here; tumor/stroke stay empty (their involvement is per-case computed,
@@ -531,8 +755,8 @@ def build_disorders(case_ids: dict):
             "review_status": "pending",
         })
     write_json_both("disorders.json", out)
-    print(f"disorders.json: {len(out)} disorders "
-          f"(stroke listed with empty case_ids; alzheimers now wired)")
+    wired = [d["disorder_id"] for d in out if d["case_ids"]]
+    print(f"disorders.json: {len(out)} disorders (wired: {', '.join(wired)})")
 
 
 def main():
@@ -540,10 +764,12 @@ def main():
     tumor = build_tumor()
     epilepsy = build_epilepsy()
     alzheimers = build_alzheimers()
+    stroke = build_stroke()  # None until the ATLAS v2.0 download is decrypted + extracted
     build_disorders({
         "glioma": tumor["case_id"],
         "epilepsy": epilepsy["case_id"],
         "alzheimers": alzheimers["case_id"],
+        "ischemic-stroke": stroke["case_id"] if stroke else None,
     })
     print("\ndone. JSON -> contract/fixtures + frontend/public/data ; "
           "assets -> frontend/public/assets")
