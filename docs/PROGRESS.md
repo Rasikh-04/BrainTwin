@@ -5,6 +5,76 @@ landed, what is deferred and who owns it, and the risks to keep in view. It is
 not a spec (the specs are `docs/DATA_CONTRACT.md` and `docs/MEDICAL_ACCURACY.md`);
 it is the shared state of the build.
 
+## 2026-07-23 Backend session 3: stroke pipeline written, ready to run on extract
+
+Branch: `data/alzheimers-atrophy`. Owner: Tabeen. The ATLAS v2.0 download was still in
+flight this session, so the goal was to land everything the stroke case needs except the
+data itself, so the next run (once the tarball is decrypted and extracted) is just
+`python3 backend/build_dataset.py` plus a verify. No new frontend work: stroke reuses the
+lesion-overlay renderer, and the case appears in the study list automatically once wired.
+
+### What landed
+
+- **`build_stroke()` in `backend/build_dataset.py`**, mirroring `build_tumor()` but with
+  NO registration. ATLAS v2.0 masks are already in MNI152 space, so involvement is
+  `compute_region_mappings(register=False)`: the lesion mask is intersected with the same
+  DK+aseg labelmap directly. Region involvement is computed from the actual mask, never
+  guessed (root CLAUDE.md golden rules 1-2), same honesty contract as tumor.
+- **Robust ATLAS discovery.** `_find_atlas_stroke_cases()` recursively globs the extracted
+  tree for the BIDS-normalized lesion masks
+  (`*_space-MNI152NLin2009aSym_label-L_desc-T1lesion_mask.nii.gz`) and pairs each with its
+  `_T1w` sibling, tolerant of whatever cohort/site nesting the archive extracts into, with
+  a looser `*mask.nii.gz` fallback for naming drift.
+- **Deterministic demo-case selection.** `select_stroke_case()` picks the subject whose
+  lesion voxel count is nearest a 15 cc target within a 2 to 80 cc window (tie-broken by
+  subject id), so the highlighted lesion is a legible territorial stroke, not a lacune that
+  lights up nothing or a near-hemisphere infarct that lights up everything.
+- **Grid handling that keeps the frontend overlay clean.** The frontend gets the ATLAS T1w
+  as `base.nii.gz` and the ATLAS mask on its native grid as `mask.nii.gz` (so the Niivue
+  overlay aligns exactly). The overlap math uses a separate copy nearest-neighbour
+  resampled onto the labelmap grid by world coordinates (both are MNI152; the specific
+  variant grid can differ by a fraction of a voxel). The resample is a no-op when grids
+  already match, and the method is stated in every mapping's provenance.
+- **Wiring.** `build_disorders()` now derives every disorder's `case_ids` from a single
+  dict (`cids` helper), and `main()` calls `build_stroke()` and passes its id through.
+  `anonymized_meta` is `{}` (ATLAS's public release ships no per-subject de-identified
+  age/sex we can cite, so nothing is invented); `report_summary` stays `NEEDS_SOURCE`.
+
+### Verified, not assumed
+
+- Import + compile clean. The graceful-skip path was run against the real (empty)
+  `data/raw/stroke`: `build_stroke()` returns `None`, prints why, and `build_dataset.py`
+  still builds the other three cases unchanged, so the frontend is not blocked today.
+- The full success path was run against a synthetic ATLAS-shaped fixture (two subjects in
+  nested BIDS `Training/<cohort>/sub-*/ses-1/anat/` dirs, lesions painted from real
+  labelmap regions on the MNI152 grid): discovery found both subjects, selection picked
+  the in-range lesion over the oversized one, `register=False` overlap passed the grid
+  check and produced correct `overlap_voxels` / `overlap_fraction_of_region` with
+  `role: primary`, provenance carried the ATLAS source note, and the resample branch
+  produced a grid-matched mask. Outputs were redirected to a temp dir, so nothing leaked
+  into the repo.
+
+### What the next (post-download) session does
+
+1. Decrypt the tarball with `data/raw/stroke/key.txt` and extract under `data/raw/stroke/`.
+2. Run `python3 backend/build_dataset.py` (about 6 to 7 min, mostly the tumor registration;
+   stroke itself is a short scan-and-intersect).
+3. Sanity-check the printed `stroke:` line (which subject, lesion cc, regions touched,
+   primary set) is anatomically coherent for the selected lesion, then
+   `python3 contract/validate.py --check-assets`.
+
+If the extracted ATLAS filenames differ from the assumed BIDS pattern, only
+`_find_atlas_stroke_cases()` needs a glob tweak; nothing else changes.
+
+### Deferred (unchanged owners)
+
+- **Detailing meshes (veins, arteries, nerves).** Still a sourcing task, not code: needs
+  external `.blend` assets (Z-Anatomy / BodyParts3D) exported and aligned into MNI space
+  (`backend/download_detailing_assets.sh` exists). Not startable this session; no source
+  assets are present.
+- **Region / disorder prose (neuro review).** Held at `NEEDS_SOURCE` by design; a human
+  sources cited text, code never writes anatomy.
+
 ## 2026-07-23 Backend session 2: tumor region involvement, computed from the mask
 
 Branch: `data/alzheimers-atrophy`. Owner: Tabeen. The flagship backend increment and
