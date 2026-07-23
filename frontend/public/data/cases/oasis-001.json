@@ -1,0 +1,82 @@
+{
+  "case_id": "oasis-001",
+  "disorder_id": "alzheimers",
+  "source_dataset": "OASIS-1",
+  "anonymized_meta": {
+    "age_band": "70-79",
+    "sex": "F"
+  },
+  "report_summary": "NEEDS_SOURCE",
+  "evidence": {
+    "renderer": "atrophy-pair",
+    "baseline": "/assets/cases/oasis-001/baseline.nii.gz",
+    "followup": "/assets/cases/oasis-001/followup.nii.gz"
+  },
+  "region_mappings": [
+    {
+      "region_id": "ctx-lh-entorhinal",
+      "role": "primary",
+      "evidence_type": "atrophy",
+      "overlap_metric": null,
+      "provenance": "cited literature pattern (PMID:1759558; PMID:1431963): typical medial-temporal atrophy in Alzheimer's disease, NOT segmented from this scan. Scan pair is a cross-sectional OASIS-1 comparison of two different subjects -- a CDR 0 reference (F, 70-79) vs this CDR 2 case -- using modulated GM probability maps (VBM) in MNI152 space; not a longitudinal same-patient pair.",
+      "notes": "literature-level typical pattern, not a per-voxel atrophy segmentation of this patient"
+    },
+    {
+      "region_id": "ctx-rh-entorhinal",
+      "role": "primary",
+      "evidence_type": "atrophy",
+      "overlap_metric": null,
+      "provenance": "cited literature pattern (PMID:1759558; PMID:1431963): typical medial-temporal atrophy in Alzheimer's disease, NOT segmented from this scan. Scan pair is a cross-sectional OASIS-1 comparison of two different subjects -- a CDR 0 reference (F, 70-79) vs this CDR 2 case -- using modulated GM probability maps (VBM) in MNI152 space; not a longitudinal same-patient pair.",
+      "notes": "literature-level typical pattern, not a per-voxel atrophy segmentation of this patient"
+    },
+    {
+      "region_id": "aseg-left-hippocampus",
+      "role": "primary",
+      "evidence_type": "atrophy",
+      "overlap_metric": null,
+      "provenance": "cited literature pattern (PMID:1759558; PMID:1431963): typical medial-temporal atrophy in Alzheimer's disease, NOT segmented from this scan. Scan pair is a cross-sectional OASIS-1 comparison of two different subjects -- a CDR 0 reference (F, 70-79) vs this CDR 2 case -- using modulated GM probability maps (VBM) in MNI152 space; not a longitudinal same-patient pair.",
+      "notes": "literature-level typical pattern, not a per-voxel atrophy segmentation of this patient"
+    },
+    {
+      "region_id": "aseg-right-hippocampus",
+      "role": "primary",
+      "evidence_type": "atrophy",
+      "overlap_metric": null,
+      "provenance": "cited literature pattern (PMID:1759558; PMID:1431963): typical medial-temporal atrophy in Alzheimer's disease, NOT segmented from this scan. Scan pair is a cross-sectional OASIS-1 comparison of two different subjects -- a CDR 0 reference (F, 70-79) vs this CDR 2 case -- using modulated GM probability maps (VBM) in MNI152 space; not a longitudinal same-patient pair.",
+      "notes": "literature-level typical pattern, not a per-voxel atrophy segmentation of this patient"
+    },
+    {
+      "region_id": "ctx-lh-parahippocampal",
+      "role": "secondary",
+      "evidence_type": "atrophy",
+      "overlap_metric": null,
+      "provenance": "cited literature pattern (PMID:1759558; PMID:1431963): typical medial-temporal atrophy in Alzheimer's disease, NOT segmented from this scan. Scan pair is a cross-sectional OASIS-1 comparison of two different subjects -- a CDR 0 reference (F, 70-79) vs this CDR 2 case -- using modulated GM probability maps (VBM) in MNI152 space; not a longitudinal same-patient pair.",
+      "notes": "literature-level typical pattern, not a per-voxel atrophy segmentation of this patient"
+    },
+    {
+      "region_id": "ctx-rh-parahippocampal",
+      "role": "secondary",
+      "evidence_type": "atrophy",
+      "overlap_metric": null,
+      "provenance": "cited literature pattern (PMID:1759558; PMID:1431963): typical medial-temporal atrophy in Alzheimer's disease, NOT segmented from this scan. Scan pair is a cross-sectional OASIS-1 comparison of two different subjects -- a CDR 0 reference (F, 70-79) vs this CDR 2 case -- using modulated GM probability maps (VBM) in MNI152 space; not a longitudinal same-patient pair.",
+      "notes": "literature-level typical pattern, not a per-voxel atrophy segmentation of this patient"
+    },
+    {
+      "region_id": "aseg-left-amygdala",
+      "role": "secondary",
+      "evidence_type": "atrophy",
+      "overlap_metric": null,
+      "provenance": "cited literature pattern (PMID:1759558; PMID:1431963): typical medial-temporal atrophy in Alzheimer's disease, NOT segmented from this scan. Scan pair is a cross-sectional OASIS-1 comparison of two different subjects -- a CDR 0 reference (F, 70-79) vs this CDR 2 case -- using modulated GM probability maps (VBM) in MNI152 space; not a longitudinal same-patient pair.",
+      "notes": "literature-level typical pattern, not a per-voxel atrophy segmentation of this patient"
+    },
+    {
+      "region_id": "aseg-right-amygdala",
+      "role": "secondary",
+      "evidence_type": "atrophy",
+      "overlap_metric": null,
+      "provenance": "cited literature pattern (PMID:1759558; PMID:1431963): typical medial-temporal atrophy in Alzheimer's disease, NOT segmented from this scan. Scan pair is a cross-sectional OASIS-1 comparison of two different subjects -- a CDR 0 reference (F, 70-79) vs this CDR 2 case -- using modulated GM probability maps (VBM) in MNI152 space; not a longitudinal same-patient pair.",
+      "notes": "literature-level typical pattern, not a per-voxel atrophy segmentation of this patient"
+    }
+  ],
+  "review_status": "pending"
+}

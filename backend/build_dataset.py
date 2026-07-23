@@ -37,12 +37,36 @@ ASSETS = ROOT / "frontend" / "public" / "assets"
 
 CORTICAL_OBJ = RAW / "meshes" / "pial_DK_obj"
 SUBCORTICAL_OBJ = RAW / "meshes" / "subcortical_obj"
+OASIS_DIR = RAW / "alzheimers" / "oasis1"
+OASIS_CSV = OASIS_DIR / "oasis_cross-sectional.csv"
 
 # Decimation: keep the atlas light enough for a laptop/phone. Faces kept = 1 - reduction.
 CORTICAL_REDUCTION = 0.75
 SUBCORTICAL_REDUCTION = 0.55
 
 PRIMARY_OVERLAP_FRACTION = 0.10  # documented threshold, used by the lesion pipeline (not here yet)
+
+# Alzheimer's atrophy pattern. This is a LITERATURE-LEVEL pattern (docs/MEDICAL_ACCURACY.md
+# "the atrophy caveat"), NOT a segmentation of any one scan. It is grounded in two real,
+# verified references and every region_id below is a node in regions.json:
+#   PMID:1759558  Braak & Braak 1991, Acta Neuropathol 82(4):239-259  (transentorhinal ->
+#                 hippocampus/limbic -> neocortex progression)
+#   PMID:1431963  Scheltens et al. 1992, J Neurol Neurosurg Psychiatry 55(10):967-72
+#                 (MRI medial-temporal / hippocampal atrophy in AD vs controls)
+# Kept deliberately tight to the early, best-established medial-temporal set so nothing
+# is overclaimed. Entorhinal + hippocampus are the earliest/most robust (primary);
+# parahippocampal + amygdala are the wider medial-temporal ring (secondary).
+AD_SOURCE = "PMID:1759558; PMID:1431963"
+AD_PATTERN: list[tuple[str, str]] = [
+    ("ctx-lh-entorhinal", "primary"),
+    ("ctx-rh-entorhinal", "primary"),
+    ("aseg-left-hippocampus", "primary"),
+    ("aseg-right-hippocampus", "primary"),
+    ("ctx-lh-parahippocampal", "secondary"),
+    ("ctx-rh-parahippocampal", "secondary"),
+    ("aseg-left-amygdala", "secondary"),
+    ("aseg-right-amygdala", "secondary"),
+]
 
 
 # --------------------------------------------------------------------------- #
@@ -365,6 +389,117 @@ def make_spectrogram(x, fs, out_path: Path):
     img.save(out_path)
 
 
+def select_oasis_pair() -> tuple[dict, dict]:
+    """Pick a CDR 0 reference subject and a CDR 2 Alzheimer's subject from OASIS-1.
+
+    Deterministic and reproducible: the AD subject is the CDR 2 case with the lowest
+    MMSE (most advanced, clearest atrophy), preferring female so the age/sex-matched
+    control pool is larger; the reference is the same-sex CDR 0 subject closest in age.
+    Both must have GM maps present on disk. Returns (reference_row, ad_row).
+    """
+    import csv
+
+    present = {p.name for p in OASIS_DIR.iterdir() if p.is_dir() and p.name.startswith("OAS1_")}
+    rows = []
+    with open(OASIS_CSV, newline="") as f:
+        for r in csv.DictReader(f):
+            if r["ID"] in present and r.get("CDR") not in ("", None):
+                rows.append(r)
+
+    def cdr(r: dict) -> float:
+        return float(r["CDR"])
+
+    def age(r: dict) -> int:
+        return int(r["Age"])
+
+    def mmse(r: dict) -> float:
+        return float(r["MMSE"]) if r.get("MMSE") else 99.0
+
+    ad_pool = sorted((r for r in rows if cdr(r) == 2.0),
+                     key=lambda r: (r["M/F"] != "F", mmse(r), r["ID"]))
+    if not ad_pool:
+        raise RuntimeError("no CDR 2 OASIS subject with GM maps on disk")
+    ad = ad_pool[0]
+
+    ref_pool = sorted((r for r in rows if cdr(r) == 0.0 and r["M/F"] == ad["M/F"]),
+                      key=lambda r: (abs(age(r) - age(ad)), r["ID"]))
+    if not ref_pool:
+        raise RuntimeError(f"no CDR 0 {ad['M/F']} reference subject with GM maps on disk")
+    return ref_pool[0], ad
+
+
+def gm_map_path(subject_id: str) -> Path:
+    """The modulated GM probability map (VBM, MNI152) for an OASIS subject."""
+    matches = sorted((OASIS_DIR / subject_id).glob("mwrc1*.nii.gz"))
+    if not matches:
+        raise FileNotFoundError(f"no mwrc1 GM map for {subject_id}")
+    return matches[0]
+
+
+def age_band(age: int) -> str:
+    lo = (age // 10) * 10
+    return f"{lo}-{lo + 9}"
+
+
+def build_alzheimers(case_id="oasis-001") -> dict:
+    """Cross-sectional atrophy evidence for Alzheimer's, from OASIS-1 VBM GM maps.
+
+    HONESTY (docs/MEDICAL_ACCURACY.md "the atrophy caveat"): OASIS-1 ships no per-voxel
+    atrophy mask and no same-patient longitudinal pair. So this is an honest cross-sectional
+    comparison of TWO DIFFERENT de-identified subjects -- a CDR 0 reference and a CDR 2 AD
+    case -- reusing the atrophy-pair renderer's baseline/followup slots (baseline = the CDR 0
+    reference, followup = the CDR 2 case). The affected-region set is the cited literature
+    pattern (AD_PATTERN), never a segmentation of this scan. The "different subjects, not
+    longitudinal" caveat is carried in every mapping's provenance and notes.
+    """
+    ref, ad = select_oasis_pair()
+    print(f"alzheimers: {case_id} <- reference {ref['ID']} (CDR {ref['CDR']}, {ref['M/F']}, "
+          f"{ref['Age']}y) vs case {ad['ID']} (CDR {ad['CDR']}, {ad['M/F']}, {ad['Age']}y)")
+
+    out = ASSETS / "cases" / case_id
+    out.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(gm_map_path(ref["ID"]), out / "baseline.nii.gz")
+    shutil.copyfile(gm_map_path(ad["ID"]), out / "followup.nii.gz")
+
+    provenance = (
+        f"cited literature pattern ({AD_SOURCE}): typical medial-temporal atrophy in "
+        f"Alzheimer's disease, NOT segmented from this scan. Scan pair is a cross-sectional "
+        f"OASIS-1 comparison of two different subjects -- a CDR 0 reference ({ref['M/F']}, "
+        f"{age_band(int(ref['Age']))}) vs this CDR {int(float(ad['CDR']))} case -- using "
+        f"modulated GM probability maps (VBM) in MNI152 space; not a longitudinal same-patient pair."
+    )
+    mappings = [
+        {
+            "region_id": rid,
+            "role": role,
+            "evidence_type": "atrophy",
+            "overlap_metric": None,
+            "provenance": provenance,
+            "notes": "literature-level typical pattern, not a per-voxel atrophy segmentation of this patient",
+        }
+        for rid, role in AD_PATTERN
+    ]
+
+    case = {
+        "case_id": case_id,
+        "disorder_id": "alzheimers",
+        "source_dataset": "OASIS-1",
+        # Only the de-identified bands OASIS provides, for the AD case subject. The reference
+        # subject's bands live in the mapping provenance above (one meta slot per case).
+        "anonymized_meta": {"age_band": age_band(int(ad["Age"])), "sex": ad["M/F"]},
+        "report_summary": "NEEDS_SOURCE",  # a clinical read is not ours to write; TODO(neuro-review)
+        "evidence": {
+            "renderer": "atrophy-pair",
+            "baseline": f"/assets/cases/{case_id}/baseline.nii.gz",
+            "followup": f"/assets/cases/{case_id}/followup.nii.gz",
+        },
+        "region_mappings": mappings,
+        "review_status": "pending",
+    }
+    write_json_both(f"cases/{case_id}.json", case)
+    return case
+
+
 def build_disorders(case_ids: dict):
     disorders = [
         {"disorder_id": "glioma", "name": "Glioma (brain tumor)", "category": "structural",
@@ -374,27 +509,42 @@ def build_disorders(case_ids: dict):
         {"disorder_id": "epilepsy", "name": "Epilepsy (seizure)", "category": "functional",
          "evidence_renderer": "eeg", "case_ids": [case_ids["epilepsy"]]},
         {"disorder_id": "alzheimers", "name": "Alzheimer's disease", "category": "neurodegenerative",
-         "evidence_renderer": "atrophy-pair", "case_ids": []},  # OASIS pair deferred
+         "evidence_renderer": "atrophy-pair", "case_ids": [case_ids["alzheimers"]]},
     ]
+    # Literature-level typical patterns (docs/MEDICAL_ACCURACY.md type 2). Only Alzheimer's
+    # has a cited pattern here; tumor/stroke stay empty (their involvement is per-case computed,
+    # not typical) and epilepsy's scalp-level involvement lives on its case, not as a "typical region".
+    typical = {
+        "alzheimers": [
+            {"region_id": rid, "source": AD_SOURCE,
+             "note": f"typical medial-temporal atrophy region in AD ({role} pattern; literature, not segmented)"}
+            for rid, role in AD_PATTERN
+        ],
+    }
     out = []
     for d in disorders:
         out.append({
             **d,
             "description": "NEEDS_SOURCE",
             "description_source": None,
-            "typical_affected_regions": [],
+            "typical_affected_regions": typical.get(d["disorder_id"], []),
             "review_status": "pending",
         })
     write_json_both("disorders.json", out)
     print(f"disorders.json: {len(out)} disorders "
-          f"(stroke + alzheimers listed with empty case_ids)")
+          f"(stroke listed with empty case_ids; alzheimers now wired)")
 
 
 def main():
     build_atlas()
     tumor = build_tumor()
     epilepsy = build_epilepsy()
-    build_disorders({"glioma": tumor["case_id"], "epilepsy": epilepsy["case_id"]})
+    alzheimers = build_alzheimers()
+    build_disorders({
+        "glioma": tumor["case_id"],
+        "epilepsy": epilepsy["case_id"],
+        "alzheimers": alzheimers["case_id"],
+    })
     print("\ndone. JSON -> contract/fixtures + frontend/public/data ; "
           "assets -> frontend/public/assets")
 

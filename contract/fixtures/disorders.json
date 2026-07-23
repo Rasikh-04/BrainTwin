@@ -41,10 +41,53 @@
     "name": "Alzheimer's disease",
     "category": "neurodegenerative",
     "evidence_renderer": "atrophy-pair",
-    "case_ids": [],
+    "case_ids": [
+      "oasis-001"
+    ],
     "description": "NEEDS_SOURCE",
     "description_source": null,
-    "typical_affected_regions": [],
+    "typical_affected_regions": [
+      {
+        "region_id": "ctx-lh-entorhinal",
+        "source": "PMID:1759558; PMID:1431963",
+        "note": "typical medial-temporal atrophy region in AD (primary pattern; literature, not segmented)"
+      },
+      {
+        "region_id": "ctx-rh-entorhinal",
+        "source": "PMID:1759558; PMID:1431963",
+        "note": "typical medial-temporal atrophy region in AD (primary pattern; literature, not segmented)"
+      },
+      {
+        "region_id": "aseg-left-hippocampus",
+        "source": "PMID:1759558; PMID:1431963",
+        "note": "typical medial-temporal atrophy region in AD (primary pattern; literature, not segmented)"
+      },
+      {
+        "region_id": "aseg-right-hippocampus",
+        "source": "PMID:1759558; PMID:1431963",
+        "note": "typical medial-temporal atrophy region in AD (primary pattern; literature, not segmented)"
+      },
+      {
+        "region_id": "ctx-lh-parahippocampal",
+        "source": "PMID:1759558; PMID:1431963",
+        "note": "typical medial-temporal atrophy region in AD (secondary pattern; literature, not segmented)"
+      },
+      {
+        "region_id": "ctx-rh-parahippocampal",
+        "source": "PMID:1759558; PMID:1431963",
+        "note": "typical medial-temporal atrophy region in AD (secondary pattern; literature, not segmented)"
+      },
+      {
+        "region_id": "aseg-left-amygdala",
+        "source": "PMID:1759558; PMID:1431963",
+        "note": "typical medial-temporal atrophy region in AD (secondary pattern; literature, not segmented)"
+      },
+      {
+        "region_id": "aseg-right-amygdala",
+        "source": "PMID:1759558; PMID:1431963",
+        "note": "typical medial-temporal atrophy region in AD (secondary pattern; literature, not segmented)"
+      }
+    ],
     "review_status": "pending"
   }
 ]

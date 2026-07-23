@@ -5,6 +5,83 @@ landed, what is deferred and who owns it, and the risks to keep in view. It is
 not a spec (the specs are `docs/DATA_CONTRACT.md` and `docs/MEDICAL_ACCURACY.md`);
 it is the shared state of the build.
 
+## 2026-07-23 Backend session 1: Alzheimer's atrophy pair (OASIS-1)
+
+Branch: `data/alzheimers-atrophy`. Owner: Tabeen. First real backend increment
+after the initial contract wiring. Closes one of the three items the frontend was
+data-blocked on: the `atrophy-pair` renderer was wired but unreached because no
+Alzheimer's case existed. It now has one, built from OASIS-1, and the disorder is
+selectable in the step-2 study picker. Contract validator passes structurally and
+with `--check-assets`; verified in a real browser (data path, wiring, region
+panel, claim-type styling).
+
+### What landed
+
+- **`oasis-001` case, cross-sectional and honest.** OASIS-1 ships no per-voxel
+  atrophy mask and no same-patient longitudinal pair (per `docs/DATA_SOURCES.md`
+  and the atrophy caveat in `docs/MEDICAL_ACCURACY.md`). So this is an honest
+  cross-subject comparison of two different de-identified subjects, reusing the
+  `atrophy-pair` renderer's slots: `baseline` = a CDR 0 reference subject, `followup`
+  = a CDR 2 Alzheimer's subject. Selection is deterministic in code (the CDR 2 case
+  with lowest MMSE, preferring female for a larger age/sex-matched control pool;
+  reference is the same-sex CDR 0 subject closest in age). It picked reference
+  OAS1_0206 (F, 78) vs case OAS1_0308 (F, 78): same sex, exact age match.
+- **The "different subjects, not longitudinal" caveat is carried in the data,** not
+  left to the UI. Every `region_mappings` entry's `provenance` states it in full,
+  including the space (modulated GM VBM maps in MNI152) and the two CDR ratings.
+  `report_summary` stays `NEEDS_SOURCE` (a clinical read is not ours to write).
+- **Region involvement is a cited literature pattern, never a segmentation.** Eight
+  medial-temporal regions (entorhinal + hippocampus primary; parahippocampal +
+  amygdala secondary), each with two real verified citations:
+  PMID:1759558 (Braak & Braak 1991, the transentorhinal to hippocampus to neocortex
+  progression) and PMID:1431963 (Scheltens et al. 1992, MRI medial-temporal and
+  hippocampal atrophy in AD vs controls). The same pattern also populates the
+  disorder's `typical_affected_regions`, so the step-1 region to disorder links
+  light up too. The frontend renders all eight as "TYPICAL / CITED", distinct from a
+  computed mask overlap, which is exactly the claim-type separation the medical
+  rules require.
+- **`build_alzheimers()` in `backend/build_dataset.py`** is the reproducible pipeline
+  (subject selection, GM-map copy to `baseline`/`followup`, case JSON, disorders
+  wiring). Nothing is hand-authored. Patient-derived `.nii.gz` assets stay
+  git-ignored under `frontend/public/assets/cases/oasis-001/`; regenerate locally
+  with `python3 backend/build_dataset.py`.
+
+### Verified, not assumed
+
+- Regional atrophy is real in the regions we map: after normalizing each subject by
+  its own total GM (to remove head-size effect), the CDR 2 case has about 31% less
+  hippocampal and 39% less amygdala GM than the CDR 0 reference (Harvard-Oxford
+  subcortical atlas, same MNI grid). This is a build-time cross-check only; the case
+  still labels the region set as a literature pattern, not a per-voxel segmentation.
+- Frontend: `disorders.json` now shows three wired studies (was two), `oasis-001`
+  fetches, both NIfTI assets return 200, the evidence viewer picks `atrophy-pair`
+  from data, and the region panel renders the mappings with correct "TYPICAL /
+  CITED" styling, provenance, notes, and de-identified meta (age band 70-79, F).
+  The Niivue volume paint itself is blocked in the headless test browser by a
+  WebGL shader-link failure that hits the existing glioma overlay identically, so
+  it is an environment limit, not a data issue.
+
+### Notes and small handoff to frontend (Abdul)
+
+- The `atrophy-pair` renderer hardcodes the panel captions "Baseline structural
+  scan" and "Follow-up structural scan". Two honesty nits for a later frontend
+  pass, not blockers: (1) these are modulated GM probability maps (VBM), not raw
+  structural T1, and (2) "baseline/follow-up" reads as one patient over time, while
+  this is two different subjects. The data provenance already says so; consider a
+  caption or a small caption prop so the cross-sectional framing is visible on the
+  viewer itself. This is a frontend/contract call, not a backend one.
+
+### Deferred (unchanged owners)
+
+- **Tumor `region_mappings` (Tabeen, next backend session).** Still the flagship
+  gap: `brats-001` shows "involvement not yet computed". Needs BraTS registered into
+  a shared atlas space, then `mask ∩ DK+aseg` overlap with real metrics. Hardest
+  piece; its own session.
+- **Stroke case (Tabeen).** Blocked on the ATLAS v2.0 download (DUA plus a 4 GB
+  encrypted tarball with a password); `data/raw/stroke` is empty. Once data is in
+  hand it reuses the lesion-overlay path, so it is a preprocessing and fixtures task.
+- **Detailing meshes and region/disorder prose** stand as previously logged.
+
 ## 2026-07-22 Frontend session 6: honesty and robustness hardening
 
 Branch: `fe/atlas-visual-fidelity`. Owner: Abdul Mannan. A non-backend-dependent
