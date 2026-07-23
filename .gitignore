@@ -24,3 +24,6 @@ venv/
 # Node / Next.js
 node_modules/
 .next/
+
+# demo recordings (large, regenerable)
+frontend/demo/recordings/

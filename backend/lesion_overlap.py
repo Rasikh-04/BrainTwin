@@ -10,8 +10,15 @@ MNI152 space:
   - BraTS glioma masks are in SRI24 voxel space (skull-stripped, 1mm). They are
     affine-registered to the MNI152 template with dipy (NOT FreeSurfer), and the mask
     is resampled with nearest-neighbour into MNI152.
-  - ATLAS v2.0 stroke masks are already in MNI152 space, so they need no registration
-    (pass register=False).
+  - ATLAS 3.0 stroke masks in the "Training Raw" release are in NATIVE scanner space
+    (BIDS `space-orig`), so they take the same registration path: their brain-extracted
+    T1w is the moving image. Only the MNI-normalized ATLAS release could use
+    register=False, and _load_mask_in_mni enforces that by refusing any mask that is not
+    already on the labelmap grid.
+
+register=False therefore means "this mask is genuinely already in MNI152", not "skip the
+expensive step". Registering native-space data by world coordinates alone would silently
+mis-assign regions: an ATLAS 3.0 raw brain sits tens of mm off the MNI brain.
 
 Once in MNI152 the mask is intersected with the DK+aseg labelmap from
 mni_parcellation.py (built from the same meshes as regions.json, so labels join
@@ -33,7 +40,10 @@ MIN_OVERLAP_VOXELS = 10          # ignore sub-threshold specks from resampling a
 
 
 def _register_mask_to_mni(base_path: Path, mask_path: Path, static_img):
-    """Affine-register a skull-stripped BraTS T1ce to MNI152 and warp its mask (NN).
+    """Affine-register a skull-stripped base scan to MNI152 and warp its mask (NN).
+
+    Used by both lesion sources, whose base scans are already brain-extracted: the BraTS
+    T1ce (SRI24 space) and the ATLAS 3.0 `desc-brain` T1w (native scanner space).
 
     Returns the mask resampled into the static (MNI152) grid as an int array.
     """
@@ -90,10 +100,14 @@ def compute_region_mappings(
     register: bool,
     lesion_values: tuple[int, ...] | None = None,
     source_note: str = "",
+    moving_space: str = "source",
 ) -> tuple[list[dict], dict]:
     """Return (region_mappings, qc). qc has lesion voxel counts for a sanity print.
 
     lesion_values: which mask integer labels count as lesion (BraTS: 1,2,4). None => any >0.
+    moving_space: the space the base scan starts in, named in the provenance when
+        register=True (e.g. "BraTS SRI24", "ATLAS 3.0 native scanner"). The provenance has
+        to state what was actually registered, so this is never guessed downstream.
     """
     from nilearn.datasets import load_mni152_template
 
@@ -105,7 +119,8 @@ def compute_region_mappings(
         if not np.allclose(static_img.affine, labels_affine, atol=1e-3):
             raise ValueError("MNI152 template grid does not match the labelmap grid.")
         mask_mni = _register_mask_to_mni(base_path, mask_path, static_img)
-        reg_desc = "BraTS SRI24 -> MNI152 dipy affine registration (mutual information)"
+        reg_desc = (f"{moving_space} -> MNI152 dipy affine registration (mutual "
+                    f"information), mask warped nearest-neighbour")
     else:
         mask_mni = _load_mask_in_mni(mask_path, labels_affine)
         reg_desc = "mask supplied already in MNI152 space (no registration)"

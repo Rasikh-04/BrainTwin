@@ -23,7 +23,7 @@
         "overlap_voxels": 3801,
         "overlap_fraction_of_region": 0.9769
       },
-      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. BraTS SRI24 -> MNI152 dipy affine registration (mutual information). Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. source -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
       "notes": ""
     },
     {
@@ -34,7 +34,7 @@
         "overlap_voxels": 3522,
         "overlap_fraction_of_region": 0.7325
       },
-      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. BraTS SRI24 -> MNI152 dipy affine registration (mutual information). Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. source -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
       "notes": ""
     },
     {
@@ -45,7 +45,7 @@
         "overlap_voxels": 7999,
         "overlap_fraction_of_region": 0.6711
       },
-      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. BraTS SRI24 -> MNI152 dipy affine registration (mutual information). Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. source -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
       "notes": ""
     },
     {
@@ -56,7 +56,7 @@
         "overlap_voxels": 1055,
         "overlap_fraction_of_region": 0.6302
       },
-      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. BraTS SRI24 -> MNI152 dipy affine registration (mutual information). Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. source -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
       "notes": ""
     },
     {
@@ -67,7 +67,7 @@
         "overlap_voxels": 613,
         "overlap_fraction_of_region": 0.5463
       },
-      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. BraTS SRI24 -> MNI152 dipy affine registration (mutual information). Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. source -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
       "notes": ""
     },
     {
@@ -78,7 +78,7 @@
         "overlap_voxels": 5500,
         "overlap_fraction_of_region": 0.4392
       },
-      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. BraTS SRI24 -> MNI152 dipy affine registration (mutual information). Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. source -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
       "notes": ""
     },
     {
@@ -89,7 +89,7 @@
         "overlap_voxels": 4043,
         "overlap_fraction_of_region": 0.3997
       },
-      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. BraTS SRI24 -> MNI152 dipy affine registration (mutual information). Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. source -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
       "notes": ""
     },
     {
@@ -100,7 +100,7 @@
         "overlap_voxels": 2334,
         "overlap_fraction_of_region": 0.3727
       },
-      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. BraTS SRI24 -> MNI152 dipy affine registration (mutual information). Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. source -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
       "notes": ""
     },
     {
@@ -111,7 +111,7 @@
         "overlap_voxels": 13359,
         "overlap_fraction_of_region": 0.296
       },
-      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. BraTS SRI24 -> MNI152 dipy affine registration (mutual information). Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. source -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
       "notes": ""
     },
     {
@@ -122,7 +122,7 @@
         "overlap_voxels": 188,
         "overlap_fraction_of_region": 0.2888
       },
-      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. BraTS SRI24 -> MNI152 dipy affine registration (mutual information). Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. source -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
       "notes": ""
     },
     {
@@ -133,7 +133,7 @@
         "overlap_voxels": 1336,
         "overlap_fraction_of_region": 0.2804
       },
-      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. BraTS SRI24 -> MNI152 dipy affine registration (mutual information). Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. source -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
       "notes": ""
     },
     {
@@ -144,7 +144,7 @@
         "overlap_voxels": 3534,
         "overlap_fraction_of_region": 0.26
       },
-      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. BraTS SRI24 -> MNI152 dipy affine registration (mutual information). Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. source -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
       "notes": ""
     },
     {
@@ -155,7 +155,7 @@
         "overlap_voxels": 5339,
         "overlap_fraction_of_region": 0.2448
       },
-      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. BraTS SRI24 -> MNI152 dipy affine registration (mutual information). Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. source -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
       "notes": ""
     },
     {
@@ -166,7 +166,7 @@
         "overlap_voxels": 2650,
         "overlap_fraction_of_region": 0.2447
       },
-      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. BraTS SRI24 -> MNI152 dipy affine registration (mutual information). Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. source -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
       "notes": ""
     },
     {
@@ -177,7 +177,7 @@
         "overlap_voxels": 601,
         "overlap_fraction_of_region": 0.2257
       },
-      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. BraTS SRI24 -> MNI152 dipy affine registration (mutual information). Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. source -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
       "notes": ""
     },
     {
@@ -188,7 +188,7 @@
         "overlap_voxels": 170,
         "overlap_fraction_of_region": 0.2208
       },
-      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. BraTS SRI24 -> MNI152 dipy affine registration (mutual information). Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. source -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
       "notes": ""
     },
     {
@@ -199,7 +199,7 @@
         "overlap_voxels": 1118,
         "overlap_fraction_of_region": 0.2086
       },
-      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. BraTS SRI24 -> MNI152 dipy affine registration (mutual information). Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. source -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
       "notes": ""
     },
     {
@@ -210,7 +210,7 @@
         "overlap_voxels": 14981,
         "overlap_fraction_of_region": 0.1486
       },
-      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. BraTS SRI24 -> MNI152 dipy affine registration (mutual information). Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. source -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
       "notes": ""
     },
     {
@@ -221,7 +221,7 @@
         "overlap_voxels": 1661,
         "overlap_fraction_of_region": 0.0514
       },
-      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. BraTS SRI24 -> MNI152 dipy affine registration (mutual information). Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. source -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
       "notes": ""
     },
     {
@@ -232,7 +232,7 @@
         "overlap_voxels": 28,
         "overlap_fraction_of_region": 0.0405
       },
-      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. BraTS SRI24 -> MNI152 dipy affine registration (mutual information). Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. source -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
       "notes": ""
     },
     {
@@ -243,7 +243,7 @@
         "overlap_voxels": 188,
         "overlap_fraction_of_region": 0.0217
       },
-      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. BraTS SRI24 -> MNI152 dipy affine registration (mutual information). Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. source -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
       "notes": ""
     },
     {
@@ -254,7 +254,7 @@
         "overlap_voxels": 63,
         "overlap_fraction_of_region": 0.0186
       },
-      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. BraTS SRI24 -> MNI152 dipy affine registration (mutual information). Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. source -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
       "notes": ""
     },
     {
@@ -265,7 +265,7 @@
         "overlap_voxels": 127,
         "overlap_fraction_of_region": 0.0152
       },
-      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. BraTS SRI24 -> MNI152 dipy affine registration (mutual information). Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. source -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
       "notes": ""
     },
     {
@@ -276,7 +276,7 @@
         "overlap_voxels": 150,
         "overlap_fraction_of_region": 0.011
       },
-      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. BraTS SRI24 -> MNI152 dipy affine registration (mutual information). Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. source -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
       "notes": ""
     },
     {
@@ -287,7 +287,7 @@
         "overlap_voxels": 171,
         "overlap_fraction_of_region": 0.0026
       },
-      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. BraTS SRI24 -> MNI152 dipy affine registration (mutual information). Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. source -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
       "notes": ""
     },
     {
@@ -298,7 +298,7 @@
         "overlap_voxels": 215,
         "overlap_fraction_of_region": 0.0023
       },
-      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. BraTS SRI24 -> MNI152 dipy affine registration (mutual information). Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. source -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
       "notes": ""
     },
     {
@@ -309,7 +309,7 @@
         "overlap_voxels": 68,
         "overlap_fraction_of_region": 0.0013
       },
-      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. BraTS SRI24 -> MNI152 dipy affine registration (mutual information). Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. source -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. glioma extent = segmentation labels 1 (necrotic core), 2 (edema), 4 (enhancing tumor) merged.",
       "notes": ""
     }
   ],
