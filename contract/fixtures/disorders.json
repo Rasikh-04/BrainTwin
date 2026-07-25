@@ -5,7 +5,28 @@
     "category": "structural",
     "evidence_renderer": "lesion-overlay",
     "case_ids": [
-      "brats-001"
+      "brats-001",
+      "brats-002",
+      "brats-003",
+      "brats-004"
+    ],
+    "cases": [
+      {
+        "case_id": "brats-001",
+        "label": "Right middletemporal \u00b7 ~26 cc"
+      },
+      {
+        "case_id": "brats-002",
+        "label": "Left caudalanteriorcingulate \u00b7 ~75 cc"
+      },
+      {
+        "case_id": "brats-003",
+        "label": "Left superiorparietal \u00b7 ~185 cc"
+      },
+      {
+        "case_id": "brats-004",
+        "label": "Left caudalanteriorcingulate \u00b7 ~266 cc"
+      }
     ],
     "description": "NEEDS_SOURCE",
     "description_source": null,
@@ -18,8 +39,51 @@
     "category": "structural",
     "evidence_renderer": "lesion-overlay",
     "case_ids": [
-      "atlas-001"
+      "atlas-001",
+      "atlas-002",
+      "atlas-003",
+      "atlas-004",
+      "atlas-005",
+      "atlas-006"
     ],
+    "cases": [
+      {
+        "case_id": "atlas-001",
+        "label": "Right insula \u00b7 ~2 cc"
+      },
+      {
+        "case_id": "atlas-002",
+        "label": "Left Caudate \u00b7 ~4 cc"
+      },
+      {
+        "case_id": "atlas-003",
+        "label": "Left Caudate \u00b7 ~7 cc"
+      },
+      {
+        "case_id": "atlas-004",
+        "label": "Left Caudate \u00b7 ~15 cc"
+      },
+      {
+        "case_id": "atlas-005",
+        "label": "Left caudalmiddlefrontal \u00b7 ~40 cc"
+      },
+      {
+        "case_id": "atlas-006",
+        "label": "Right parsopercularis \u00b7 ~80 cc"
+      }
+    ],
+    "description": "NEEDS_SOURCE",
+    "description_source": null,
+    "typical_affected_regions": [],
+    "review_status": "pending"
+  },
+  {
+    "disorder_id": "hemorrhagic-stroke",
+    "name": "Hemorrhagic stroke",
+    "category": "structural",
+    "evidence_renderer": "lesion-overlay",
+    "case_ids": [],
+    "cases": [],
     "description": "NEEDS_SOURCE",
     "description_source": null,
     "typical_affected_regions": [],
@@ -31,7 +95,23 @@
     "category": "functional",
     "evidence_renderer": "eeg",
     "case_ids": [
-      "chbmit-01"
+      "chbmit-01",
+      "chbmit-02",
+      "chbmit-03"
+    ],
+    "cases": [
+      {
+        "case_id": "chbmit-01",
+        "label": "Seizure at 49:56 \u00b7 left temporal"
+      },
+      {
+        "case_id": "chbmit-02",
+        "label": "Seizure at 24:27 \u00b7 left temporal"
+      },
+      {
+        "case_id": "chbmit-03",
+        "label": "Seizure at 28:52 \u00b7 left temporal"
+      }
     ],
     "description": "NEEDS_SOURCE",
     "description_source": null,
@@ -44,7 +124,23 @@
     "category": "neurodegenerative",
     "evidence_renderer": "atrophy-pair",
     "case_ids": [
-      "oasis-001"
+      "oasis-001",
+      "oasis-002",
+      "oasis-003"
+    ],
+    "cases": [
+      {
+        "case_id": "oasis-001",
+        "label": "CDR 2 (moderate) \u00b7 F, 70-79"
+      },
+      {
+        "case_id": "oasis-002",
+        "label": "CDR 1 (mild) \u00b7 F, 70-79"
+      },
+      {
+        "case_id": "oasis-003",
+        "label": "CDR 0.5 (very mild) \u00b7 F, 60-69"
+      }
     ],
     "description": "NEEDS_SOURCE",
     "description_source": null,

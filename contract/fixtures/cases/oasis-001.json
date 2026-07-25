@@ -2,6 +2,7 @@
   "case_id": "oasis-001",
   "disorder_id": "alzheimers",
   "source_dataset": "OASIS-1",
+  "label": "CDR 2 (moderate) \u00b7 F, 70-79",
   "anonymized_meta": {
     "age_band": "70-79",
     "sex": "F"

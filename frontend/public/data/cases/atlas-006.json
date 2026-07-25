@@ -1,0 +1,261 @@
+{
+  "case_id": "atlas-006",
+  "disorder_id": "ischemic-stroke",
+  "source_dataset": "ATLAS 3.0",
+  "label": "Right parsopercularis \u00b7 ~80 cc",
+  "anonymized_meta": {},
+  "report_summary": "NEEDS_SOURCE",
+  "evidence": {
+    "renderer": "lesion-overlay",
+    "base": "/assets/cases/atlas-006/base.nii.gz",
+    "mask": "/assets/cases/atlas-006/mask.nii.gz",
+    "mask_labels": {
+      "1": "stroke lesion"
+    }
+  },
+  "region_mappings": [
+    {
+      "region_id": "ctx-rh-parsopercularis",
+      "role": "primary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 7104,
+        "overlap_fraction_of_region": 0.8929
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. ATLAS 3.0 native scanner space (brain-extracted T1w) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. stroke lesion = ATLAS manual lesion segmentation (sub-r001s010), BIDS space-orig. The Training Raw release is not MNI-normalized, so the lesion reaches atlas space via its own T1w, not by assumption.",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-rh-transversetemporal",
+      "role": "primary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 1195,
+        "overlap_fraction_of_region": 0.8322
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. ATLAS 3.0 native scanner space (brain-extracted T1w) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. stroke lesion = ATLAS manual lesion segmentation (sub-r001s010), BIDS space-orig. The Training Raw release is not MNI-normalized, so the lesion reaches atlas space via its own T1w, not by assumption.",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-rh-supramarginal",
+      "role": "primary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 28407,
+        "overlap_fraction_of_region": 0.7436
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. ATLAS 3.0 native scanner space (brain-extracted T1w) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. stroke lesion = ATLAS manual lesion segmentation (sub-r001s010), BIDS space-orig. The Training Raw release is not MNI-normalized, so the lesion reaches atlas space via its own T1w, not by assumption.",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-rh-insula",
+      "role": "primary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 7760,
+        "overlap_fraction_of_region": 0.5714
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. ATLAS 3.0 native scanner space (brain-extracted T1w) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. stroke lesion = ATLAS manual lesion segmentation (sub-r001s010), BIDS space-orig. The Training Raw release is not MNI-normalized, so the lesion reaches atlas space via its own T1w, not by assumption.",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-rh-superiortemporal",
+      "role": "primary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 11339,
+        "overlap_fraction_of_region": 0.456
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. ATLAS 3.0 native scanner space (brain-extracted T1w) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. stroke lesion = ATLAS manual lesion segmentation (sub-r001s010), BIDS space-orig. The Training Raw release is not MNI-normalized, so the lesion reaches atlas space via its own T1w, not by assumption.",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-rh-postcentral",
+      "role": "primary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 11222,
+        "overlap_fraction_of_region": 0.2154
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. ATLAS 3.0 native scanner space (brain-extracted T1w) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. stroke lesion = ATLAS manual lesion segmentation (sub-r001s010), BIDS space-orig. The Training Raw release is not MNI-normalized, so the lesion reaches atlas space via its own T1w, not by assumption.",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-rh-precentral",
+      "role": "primary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 8950,
+        "overlap_fraction_of_region": 0.1835
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. ATLAS 3.0 native scanner space (brain-extracted T1w) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. stroke lesion = ATLAS manual lesion segmentation (sub-r001s010), BIDS space-orig. The Training Raw release is not MNI-normalized, so the lesion reaches atlas space via its own T1w, not by assumption.",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-rh-bankssts",
+      "role": "primary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 977,
+        "overlap_fraction_of_region": 0.1486
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. ATLAS 3.0 native scanner space (brain-extracted T1w) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. stroke lesion = ATLAS manual lesion segmentation (sub-r001s010), BIDS space-orig. The Training Raw release is not MNI-normalized, so the lesion reaches atlas space via its own T1w, not by assumption.",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-rh-inferiorparietal",
+      "role": "primary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 10567,
+        "overlap_fraction_of_region": 0.1244
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. ATLAS 3.0 native scanner space (brain-extracted T1w) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. stroke lesion = ATLAS manual lesion segmentation (sub-r001s010), BIDS space-orig. The Training Raw release is not MNI-normalized, so the lesion reaches atlas space via its own T1w, not by assumption.",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-rh-parstriangularis",
+      "role": "primary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 1232,
+        "overlap_fraction_of_region": 0.1211
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. ATLAS 3.0 native scanner space (brain-extracted T1w) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. stroke lesion = ATLAS manual lesion segmentation (sub-r001s010), BIDS space-orig. The Training Raw release is not MNI-normalized, so the lesion reaches atlas space via its own T1w, not by assumption.",
+      "notes": ""
+    },
+    {
+      "region_id": "aseg-right-putamen",
+      "role": "primary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 1480,
+        "overlap_fraction_of_region": 0.1166
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. ATLAS 3.0 native scanner space (brain-extracted T1w) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. stroke lesion = ATLAS manual lesion segmentation (sub-r001s010), BIDS space-orig. The Training Raw release is not MNI-normalized, so the lesion reaches atlas space via its own T1w, not by assumption.",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-rh-parsorbitalis",
+      "role": "primary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 47,
+        "overlap_fraction_of_region": 0.104
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. ATLAS 3.0 native scanner space (brain-extracted T1w) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. stroke lesion = ATLAS manual lesion segmentation (sub-r001s010), BIDS space-orig. The Training Raw release is not MNI-normalized, so the lesion reaches atlas space via its own T1w, not by assumption.",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-rh-lateralorbitofrontal",
+      "role": "secondary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 747,
+        "overlap_fraction_of_region": 0.0923
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. ATLAS 3.0 native scanner space (brain-extracted T1w) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. stroke lesion = ATLAS manual lesion segmentation (sub-r001s010), BIDS space-orig. The Training Raw release is not MNI-normalized, so the lesion reaches atlas space via its own T1w, not by assumption.",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-rh-middletemporal",
+      "role": "secondary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 2172,
+        "overlap_fraction_of_region": 0.0806
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. ATLAS 3.0 native scanner space (brain-extracted T1w) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. stroke lesion = ATLAS manual lesion segmentation (sub-r001s010), BIDS space-orig. The Training Raw release is not MNI-normalized, so the lesion reaches atlas space via its own T1w, not by assumption.",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-rh-caudalmiddlefrontal",
+      "role": "secondary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 2205,
+        "overlap_fraction_of_region": 0.0694
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. ATLAS 3.0 native scanner space (brain-extracted T1w) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. stroke lesion = ATLAS manual lesion segmentation (sub-r001s010), BIDS space-orig. The Training Raw release is not MNI-normalized, so the lesion reaches atlas space via its own T1w, not by assumption.",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-rh-rostralmiddlefrontal",
+      "role": "secondary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 2750,
+        "overlap_fraction_of_region": 0.0601
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. ATLAS 3.0 native scanner space (brain-extracted T1w) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. stroke lesion = ATLAS manual lesion segmentation (sub-r001s010), BIDS space-orig. The Training Raw release is not MNI-normalized, so the lesion reaches atlas space via its own T1w, not by assumption.",
+      "notes": ""
+    },
+    {
+      "region_id": "aseg-right-caudate",
+      "role": "secondary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 711,
+        "overlap_fraction_of_region": 0.0549
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. ATLAS 3.0 native scanner space (brain-extracted T1w) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. stroke lesion = ATLAS manual lesion segmentation (sub-r001s010), BIDS space-orig. The Training Raw release is not MNI-normalized, so the lesion reaches atlas space via its own T1w, not by assumption.",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-rh-paracentral",
+      "role": "secondary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 276,
+        "overlap_fraction_of_region": 0.02
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. ATLAS 3.0 native scanner space (brain-extracted T1w) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. stroke lesion = ATLAS manual lesion segmentation (sub-r001s010), BIDS space-orig. The Training Raw release is not MNI-normalized, so the lesion reaches atlas space via its own T1w, not by assumption.",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-rh-superiorparietal",
+      "role": "secondary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 1574,
+        "overlap_fraction_of_region": 0.019
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. ATLAS 3.0 native scanner space (brain-extracted T1w) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. stroke lesion = ATLAS manual lesion segmentation (sub-r001s010), BIDS space-orig. The Training Raw release is not MNI-normalized, so the lesion reaches atlas space via its own T1w, not by assumption.",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-rh-posteriorcingulate",
+      "role": "secondary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 52,
+        "overlap_fraction_of_region": 0.006
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. ATLAS 3.0 native scanner space (brain-extracted T1w) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. stroke lesion = ATLAS manual lesion segmentation (sub-r001s010), BIDS space-orig. The Training Raw release is not MNI-normalized, so the lesion reaches atlas space via its own T1w, not by assumption.",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-rh-superiorfrontal",
+      "role": "secondary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 195,
+        "overlap_fraction_of_region": 0.0021
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. ATLAS 3.0 native scanner space (brain-extracted T1w) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. stroke lesion = ATLAS manual lesion segmentation (sub-r001s010), BIDS space-orig. The Training Raw release is not MNI-normalized, so the lesion reaches atlas space via its own T1w, not by assumption.",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-rh-inferiortemporal",
+      "role": "secondary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 20,
+        "overlap_fraction_of_region": 0.0014
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. ATLAS 3.0 native scanner space (brain-extracted T1w) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. stroke lesion = ATLAS manual lesion segmentation (sub-r001s010), BIDS space-orig. The Training Raw release is not MNI-normalized, so the lesion reaches atlas space via its own T1w, not by assumption.",
+      "notes": ""
+    }
+  ],
+  "review_status": "pending"
+}

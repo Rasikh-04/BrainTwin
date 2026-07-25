@@ -1,0 +1,33 @@
+{
+  "case_id": "chbmit-03",
+  "disorder_id": "epilepsy",
+  "source_dataset": "CHB-MIT",
+  "label": "Seizure at 28:52 \u00b7 left temporal",
+  "anonymized_meta": {
+    "age_band": "10-19",
+    "sex": "F"
+  },
+  "report_summary": "NEEDS_SOURCE",
+  "evidence": {
+    "renderer": "eeg",
+    "spectrogram": "/assets/cases/chbmit-03/spectrogram.png",
+    "waveform": "/assets/cases/chbmit-03/waveform.json",
+    "onset_seconds": 1732,
+    "duration_seconds": 40,
+    "involved_channels": [
+      "F7-T7",
+      "T7-P7"
+    ]
+  },
+  "region_mappings": [
+    {
+      "region_id": "ctx-lh-superiortemporal",
+      "role": "primary",
+      "evidence_type": "eeg",
+      "overlap_metric": null,
+      "provenance": "scalp-channel-level and approximate: channels F7-T7, T7-P7 overlie left temporal cortex; not a localized brain focus",
+      "notes": "scalp EEG cannot localize a precise brain focus"
+    }
+  ],
+  "review_status": "pending"
+}
