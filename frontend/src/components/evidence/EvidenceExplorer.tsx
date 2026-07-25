@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 
+import { CasePicker } from "@/components/evidence/CasePicker";
 import { DisorderList } from "@/components/evidence/DisorderList";
 import { EvidenceView } from "@/components/evidence/EvidenceView";
 import { loadCase } from "@/lib/contract/load";
-import type { Case } from "@/lib/contract/types";
+import type { Case, DisorderCaseRef } from "@/lib/contract/types";
 import { useAtlasStore } from "@/store/useAtlasStore";
 
 /**
@@ -65,6 +66,18 @@ export function EvidenceExplorer() {
   const error = failed && failed.id === activeCaseId ? failed.message : null;
   const hasAnyCase = disorders.some((d) => d.case_ids.length > 0);
 
+  // The disorder that owns the active case, and its per-case picker entries.
+  // Prefer the contract's labelled `cases`; fall back to case_ids (label = id)
+  // for a disorder emitted before the additive field existed. The picker only
+  // renders when a disorder carries more than one case.
+  const activeDisorder = activeCaseId
+    ? (disorders.find((d) => d.case_ids.includes(activeCaseId)) ?? null)
+    : null;
+  const caseRefs: DisorderCaseRef[] =
+    activeDisorder?.cases ??
+    activeDisorder?.case_ids.map((id) => ({ case_id: id, label: id })) ??
+    [];
+
   return (
     <div className="anim-fade flex min-h-0 flex-1 flex-col md:flex-row">
       <div className="shrink-0 border-b border-line bg-surface-1 md:w-56 md:border-b-0 md:border-r">
@@ -93,11 +106,24 @@ export function EvidenceExplorer() {
             processed.
           </p>
         </div>
-      ) : activeCase ? (
-        <EvidenceView activeCase={activeCase} />
       ) : (
-        <div className="flex min-h-0 flex-1 items-center justify-center">
-          <p className="ident text-ink-faint">Loading case…</p>
+        // Column so the case picker stays put while the newly-picked case is
+        // still fetching, rather than flashing out with the evidence view.
+        <div className="flex min-h-0 flex-1 flex-col">
+          {caseRefs.length > 1 && (
+            <CasePicker
+              cases={caseRefs}
+              activeCaseId={activeCaseId}
+              onSelect={setActiveCase}
+            />
+          )}
+          {activeCase ? (
+            <EvidenceView activeCase={activeCase} />
+          ) : (
+            <div className="flex min-h-0 flex-1 items-center justify-center">
+              <p className="ident text-ink-faint">Loading case…</p>
+            </div>
+          )}
         </div>
       )}
     </div>

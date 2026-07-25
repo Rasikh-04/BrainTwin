@@ -56,11 +56,17 @@ Rules: `atlas_source` is one of `desikan-killiany`, `aseg`, `aal`. `structure_ty
   "description_source": null,
   "typical_affected_regions": [],
   "case_ids": ["brats-001", "brats-002"],
+  "cases": [
+    { "case_id": "brats-001", "label": "Right middletemporal · ~34 cc" },
+    { "case_id": "brats-002", "label": "Left insula · ~12 cc" }
+  ],
   "review_status": "pending"
 }
 ```
 
 Rules: `evidence_renderer` is one of `lesion-overlay`, `atrophy-pair`, `eeg`. This is the only switch the frontend uses to decide how to render step 2, so the frontend never hardcodes per-disorder rendering logic. `typical_affected_regions` is for literature-level patterns only (Alzheimer's, epilepsy) and each entry must carry a citation; for tumor and stroke this stays empty because involvement is per case and computed, not typical.
+
+`cases` is an additive, optional field parallel to `case_ids`: one `{ case_id, label }` per case, in the same order. It exists so the frontend can offer a within-disorder case picker (a disorder can carry several de-identified cases that differ in lesion position and size, in severity, or in seizure onset). Each `label` is derived by the backend from computed data — the top overlap region plus lesion size, the CDR severity, or the seizure onset — never authored in the UI or the model. Consumers must treat `cases` as optional and fall back to `case_ids` (using the id as the label) when it is absent; `case_ids` stays the canonical list.
 
 `typical_affected_regions` entry shape when used:
 
@@ -77,6 +83,7 @@ The heart of traceability. One file per de-identified case. `region_mappings` is
   "case_id": "brats-001",
   "disorder_id": "glioma",
   "source_dataset": "BraTS",
+  "label": "Right middletemporal · ~34 cc",
   "anonymized_meta": { "age_band": "40-49", "sex": "F" },
   "report_summary": "NEEDS_SOURCE",
   "evidence": {
@@ -106,6 +113,7 @@ Rules:
 - For `atrophy-pair` cases, `evidence` carries `baseline` and `followup` paths instead of `base` and `mask`, and mappings use `evidence_type: "atrophy"` with the CDR rating and the citation for the atrophy pattern in `provenance`.
 - For `eeg` cases, `evidence` carries `spectrogram`, `waveform`, `onset_seconds`, `duration_seconds`, and `involved_channels`. Mappings use `evidence_type: "eeg"` and must be labeled as scalp-channel-level, not precise brain foci (see the scalp EEG caveat in `docs/MEDICAL_ACCURACY.md`).
 - `role` is `primary` or `secondary`. The frontend color-codes by role.
+- `label` is an additive, optional short human descriptor for the case picker and the evidence header (for example `"Right middletemporal · ~34 cc"`, `"CDR 1 (mild) · F, 70-79"`, `"Seizure at 49:56 · left temporal"`). It is derived by the backend from computed data — the top overlap region plus lesion size, the CDR severity, or the seizure onset — never authored by hand. It mirrors the matching entry in the disorder's `cases` array. When absent, consumers fall back to the `case_id`.
 - No field is ever populated with a fabricated value to make the file look complete. Missing means `NEEDS_SOURCE` or an empty array.
 
 ## Mesh contract

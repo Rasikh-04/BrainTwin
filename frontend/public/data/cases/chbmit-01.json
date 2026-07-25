@@ -2,6 +2,7 @@
   "case_id": "chbmit-01",
   "disorder_id": "epilepsy",
   "source_dataset": "CHB-MIT",
+  "label": "Seizure at 49:56 \u00b7 left temporal",
   "anonymized_meta": {
     "age_band": "10-19",
     "sex": "F"

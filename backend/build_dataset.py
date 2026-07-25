@@ -17,6 +17,9 @@ Grounding rules (see docs/MEDICAL_ACCURACY.md) are enforced here:
   - Everything ships review_status: "pending".
 
 Run:  python3 backend/build_dataset.py
+Case building (dipy affine registration to MNI152) is the expensive step, so a case
+whose JSON already exists under contract/fixtures/cases/ is reused as-is rather than
+rebuilt -- add --force to ignore the cache and rebuild every case from raw data.
 This is offline precompute. Nothing here runs at app runtime.
 """
 from __future__ import annotations
@@ -25,6 +28,7 @@ import json
 import re
 import shutil
 import struct
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -48,6 +52,14 @@ STROKE_DIR = RAW / "stroke"
 STROKE_TARGET_VOXELS = 15000   # ~15 cc at 1mm; a solid, clearly territorial lesion
 STROKE_MIN_VOXELS = 2000       # drop tiny lacunes that highlight ~nothing
 STROKE_MAX_VOXELS = 80000      # drop near-hemisphere infarcts that light up everything
+
+# How many demo cases to wire per structural disorder, to show position/intensity
+# variety across real subjects (the "vary position and intensity" ask). Bounded by how
+# many subjects are actually extracted on disk; the selectors spread across the lesion-
+# size range so the picker spans small -> large lesions in different regions.
+N_STROKE_CASES = 6   # from the extracted ATLAS 3.0 subjects
+N_TUMOR_CASES = 4    # from the downloaded BraTS subjects
+N_HEMORRHAGE_CASES = 4  # from CT-ICH, once its DUA-gated download lands (dormant until then)
 
 # Decimation: keep the atlas light enough for a laptop/phone. Faces kept = 1 - reduction.
 CORTICAL_REDUCTION = 0.75
@@ -117,6 +129,39 @@ def hemisphere_of(region_id: str) -> str:
     if region_id.startswith("ctx-rh-") or region_id.startswith("aseg-right-"):
         return "right"
     return "midline"
+
+
+# --------------------------------------------------------------------------- #
+# multi-case selection + labelling
+# --------------------------------------------------------------------------- #
+
+def spread_pick(items: list, n: int) -> list:
+    """Pick up to n items evenly spread across a list (both ends included).
+
+    `items` must be pre-sorted by whatever axis the spread should span (e.g. lesion
+    volume). Deterministic: same input -> same picks. Used so the demo cases cover the
+    small -> large range instead of clustering, which is what makes the position/intensity
+    variety visible in the case picker.
+    """
+    if n <= 0:
+        return []
+    if len(items) <= n:
+        return list(items)
+    idxs = sorted({round(i * (len(items) - 1) / (n - 1)) for i in range(n)})
+    return [items[i] for i in idxs]
+
+
+def lesion_label(mappings: list[dict], vol_voxels: int) -> str:
+    """A short human descriptor for the case picker, built ONLY from computed data.
+
+    Region name comes from the top computed overlap (never guessed), size from the mask's
+    own voxel count (1 mm isotropic, so voxels ~= cc). This is a UI convenience string,
+    not a clinical claim; the grounded detail still lives in each mapping's provenance.
+    """
+    cc = vol_voxels / 1000.0
+    if mappings:
+        return f"{humanize(mappings[0]['region_id'])} · ~{cc:.0f} cc"
+    return f"~{cc:.0f} cc lesion (no atlas overlap)"
 
 
 # --------------------------------------------------------------------------- #
@@ -227,6 +272,24 @@ def write_json_both(rel: str, obj):
         p.write_text(text)
 
 
+# Case building is the expensive part of this pipeline (dipy affine registration to MNI152
+# per tumor/stroke/hemorrhage case can take several minutes each). Raw datasets don't change
+# during the project, so case_id -> output is stable across runs; skip rebuilding a case
+# whose JSON is already on disk unless --force is passed. This is the same
+# cache-if-output-exists pattern mni_parcellation.build_labelmap() already uses.
+FORCE_REBUILD = False
+
+
+def _cached_case(case_id: str) -> dict | None:
+    """The already-built case JSON for case_id, or None if absent or --force was passed."""
+    if FORCE_REBUILD:
+        return None
+    path = FIXTURES / "cases" / f"{case_id}.json"
+    if not path.exists():
+        return None
+    return json.loads(path.read_text())
+
+
 def region_record(region_id: str, atlas_source: str, structure_type: str, centroid) -> dict:
     return {
         "region_id": region_id,
@@ -278,7 +341,36 @@ def build_atlas() -> list[str]:
     return [r["region_id"] for r in regions_json]
 
 
+TUMOR_LESION_VALUES = (1, 2, 4)  # necrotic core, edema, enhancing tumor -> merged extent
+
+
+def _tumor_lesion_voxels(src_case: str) -> int:
+    """Count merged-lesion voxels in a BraTS seg, for size-spread case selection."""
+    import nibabel as nib
+
+    seg = RAW / "tumor" / src_case / f"{src_case}_seg.nii.gz"
+    data = np.asarray(nib.load(str(seg)).dataobj)
+    return int(np.count_nonzero(np.isin(data, TUMOR_LESION_VALUES)))
+
+
+def select_tumor_cases(n: int) -> list[tuple[str, str]]:
+    """Pick n BraTS subjects spread across tumor size. Returns [(case_id, src_case)].
+
+    Deterministic: score every downloaded subject by merged-lesion voxel count, sort, and
+    spread-pick n so the demo spans a small focal tumor -> a large one. case_ids are
+    assigned brats-001.. in ascending size order.
+    """
+    dirs = sorted(p.name for p in (RAW / "tumor").glob("BraTS2021_*") if p.is_dir())
+    scored = sorted(((_tumor_lesion_voxels(d), d) for d in dirs), key=lambda s: (s[0], s[1]))
+    picked = spread_pick(scored, n)
+    return [(f"brats-{i + 1:03d}", src) for i, (_vol, src) in enumerate(picked)]
+
+
 def build_tumor(case_id="brats-001", src_case="BraTS2021_00000") -> dict:
+    cached = _cached_case(case_id)
+    if cached is not None:
+        print(f"tumor: {case_id} <- {src_case} (cached, skipping registration)")
+        return cached
     print(f"tumor: {case_id} <- {src_case}")
     src = RAW / "tumor" / src_case
     out = ASSETS / "cases" / case_id
@@ -296,7 +388,7 @@ def build_tumor(case_id="brats-001", src_case="BraTS2021_00000") -> dict:
     from lesion_overlap import compute_region_mappings
 
     mappings, qc = compute_region_mappings(
-        base_src, mask_src, register=True, lesion_values=(1, 2, 4),
+        base_src, mask_src, register=True, lesion_values=TUMOR_LESION_VALUES,
         source_note="glioma extent = segmentation labels 1 (necrotic core), 2 (edema), "
                     "4 (enhancing tumor) merged.",
     )
@@ -309,6 +401,7 @@ def build_tumor(case_id="brats-001", src_case="BraTS2021_00000") -> dict:
         "case_id": case_id,
         "disorder_id": "glioma",
         "source_dataset": "BraTS",
+        "label": lesion_label(mappings, qc["lesion_voxels_in_mni"]),
         # BraTS in-hand files carry no de-identified age/sex fields, so we invent nothing.
         "anonymized_meta": {},
         "report_summary": "NEEDS_SOURCE",
@@ -325,16 +418,48 @@ def build_tumor(case_id="brats-001", src_case="BraTS2021_00000") -> dict:
     return case
 
 
-def build_epilepsy(case_id="chbmit-01") -> dict:
-    print(f"epilepsy: {case_id} <- chb01_03.edf")
+# CHB-MIT chb01 seizure windows, from chb01-summary.txt (real annotations). All are the
+# SAME patient (chb01, a known left-temporal-onset case), so the involved scalp chain is
+# the same across them; what varies is the seizure episode and its timing -- honest
+# multi-recording variety for a scalp-EEG disorder, not a spatial-focus claim. Only the
+# EDFs actually on disk are built.
+EPILEPSY_INVOLVED = ["F7-T7", "T7-P7"]  # left temporal chain (scalp-level, approximate)
+EPILEPSY_CASES = [
+    ("chbmit-01", "chb01_03.edf", 2996, 3036),
+    ("chbmit-02", "chb01_04.edf", 1467, 1494),
+    ("chbmit-03", "chb01_15.edf", 1732, 1772),
+]
+
+
+def select_epilepsy_cases(n: int) -> list[tuple[str, str, int, int]]:
+    """The declared chb01 seizure windows whose EDF is present, capped at n."""
+    present = [
+        spec for spec in EPILEPSY_CASES
+        if (RAW / "epilepsy" / "chb01" / spec[1]).exists()
+    ]
+    return present[:n]
+
+
+def build_epilepsy(case_id="chbmit-01", edf_name="chb01_03.edf",
+                   onset=2996, offset=3036) -> dict | None:
+    cached = _cached_case(case_id)
+    if cached is not None:
+        print(f"epilepsy: {case_id} <- {edf_name} (cached)")
+        return cached
+    print(f"epilepsy: {case_id} <- {edf_name}")
     from edf_reader import Edf
 
-    edf_path = RAW / "epilepsy" / "chb01" / "chb01_03.edf"
-    onset, offset = 2996, 3036  # from chb01-summary.txt (real annotation)
+    edf_path = RAW / "epilepsy" / "chb01" / edf_name
     pad = 10
-    involved = ["F7-T7", "T7-P7"]  # left temporal chain (scalp-level, approximate)
 
     edf = Edf(str(edf_path))
+    # This patient's left-temporal chain, restricted to channels actually in this montage
+    # (CHB-MIT montages drift slightly between files). Skip the case if neither is present
+    # rather than KeyError on a missing channel.
+    involved = [ch for ch in EPILEPSY_INVOLVED if ch in edf.labels]
+    if not involved:
+        print(f"  skip {case_id}: none of {EPILEPSY_INVOLVED} in {edf_name} montage")
+        return None
     fs, sig = edf.read_window(onset - pad, offset + pad)
 
     out = ASSETS / "cases" / case_id
@@ -362,10 +487,12 @@ def build_epilepsy(case_id="chbmit-01") -> dict:
     # spectrogram.png of the first involved channel
     make_spectrogram(sig[involved[0]], fs, out / "spectrogram.png")
 
+    mm, ss = divmod(onset, 60)
     case = {
         "case_id": case_id,
         "disorder_id": "epilepsy",
         "source_dataset": "CHB-MIT",
+        "label": f"Seizure at {mm}:{ss:02d} · left temporal",
         "anonymized_meta": {"age_band": "10-19", "sex": "F"},  # chb01: known 11yo female
         "report_summary": "NEEDS_SOURCE",
         "evidence": {
@@ -382,8 +509,9 @@ def build_epilepsy(case_id="chbmit-01") -> dict:
                 "role": "primary",
                 "evidence_type": "eeg",
                 "overlap_metric": None,
-                "provenance": ("scalp-channel-level and approximate: channels F7-T7, T7-P7 "
-                               "overlie left temporal cortex; not a localized brain focus"),
+                "provenance": ("scalp-channel-level and approximate: channels "
+                               f"{', '.join(involved)} overlie left temporal cortex; "
+                               "not a localized brain focus"),
                 "notes": "scalp EEG cannot localize a precise brain focus",
             }
         ],
@@ -413,42 +541,67 @@ def make_spectrogram(x, fs, out_path: Path):
     img.save(out_path)
 
 
-def select_oasis_pair() -> tuple[dict, dict]:
-    """Pick a CDR 0 reference subject and a CDR 2 Alzheimer's subject from OASIS-1.
+# OASIS-1 severity ladder for the Alzheimer's cases, coarsest atrophy first. Each is a
+# different de-identified AD subject at a distinct Clinical Dementia Rating, paired with an
+# age/sex-matched CDR 0 control -- so the demo shows the SEVERITY (intensity) gradient of
+# atrophy, not just one case. Still a cross-sectional two-subject comparison, never a
+# longitudinal same-patient pair (docs/MEDICAL_ACCURACY.md "the atrophy caveat").
+AD_SEVERITY: list[tuple[float, str]] = [
+    (2.0, "moderate"),
+    (1.0, "mild"),
+    (0.5, "very mild"),
+]
 
-    Deterministic and reproducible: the AD subject is the CDR 2 case with the lowest
-    MMSE (most advanced, clearest atrophy), preferring female so the age/sex-matched
-    control pool is larger; the reference is the same-sex CDR 0 subject closest in age.
-    Both must have GM maps present on disk. Returns (reference_row, ad_row).
-    """
+
+def _cdr(r: dict) -> float:
+    return float(r["CDR"])
+
+
+def _age(r: dict) -> int:
+    return int(r["Age"])
+
+
+def _mmse(r: dict) -> float:
+    return float(r["MMSE"]) if r.get("MMSE") else 99.0
+
+
+def load_oasis_rows() -> list[dict]:
+    """OASIS-1 rows that both have a CDR and a GM map present on disk."""
     import csv
 
     present = {p.name for p in OASIS_DIR.iterdir() if p.is_dir() and p.name.startswith("OAS1_")}
     rows = []
     with open(OASIS_CSV, newline="") as f:
         for r in csv.DictReader(f):
-            if r["ID"] in present and r.get("CDR") not in ("", None):
+            if r["ID"] in present and r.get("CDR") not in ("", None) and gm_map_present(r["ID"]):
                 rows.append(r)
+    return rows
 
-    def cdr(r: dict) -> float:
-        return float(r["CDR"])
 
-    def age(r: dict) -> int:
-        return int(r["Age"])
+def gm_map_present(subject_id: str) -> bool:
+    return bool(list((OASIS_DIR / subject_id).glob("mwrc1*.nii.gz")))
 
-    def mmse(r: dict) -> float:
-        return float(r["MMSE"]) if r.get("MMSE") else 99.0
 
-    ad_pool = sorted((r for r in rows if cdr(r) == 2.0),
-                     key=lambda r: (r["M/F"] != "F", mmse(r), r["ID"]))
+def select_oasis_pair(rows: list[dict], target_cdr: float,
+                      used_ids: set[str]) -> tuple[dict, dict] | None:
+    """Pick a (reference CDR 0, AD at target_cdr) pair, avoiding already-used subjects.
+
+    Deterministic: the AD subject is the target-CDR case with the lowest MMSE (clearest
+    atrophy), preferring female so the age/sex-matched control pool is larger; the
+    reference is the same-sex CDR 0 subject closest in age. Returns None when either pool
+    is empty (that severity simply isn't wired), so a thin OASIS extract still builds.
+    """
+    ad_pool = sorted((r for r in rows if _cdr(r) == target_cdr and r["ID"] not in used_ids),
+                     key=lambda r: (r["M/F"] != "F", _mmse(r), r["ID"]))
     if not ad_pool:
-        raise RuntimeError("no CDR 2 OASIS subject with GM maps on disk")
+        return None
     ad = ad_pool[0]
 
-    ref_pool = sorted((r for r in rows if cdr(r) == 0.0 and r["M/F"] == ad["M/F"]),
-                      key=lambda r: (abs(age(r) - age(ad)), r["ID"]))
+    ref_pool = sorted(
+        (r for r in rows if _cdr(r) == 0.0 and r["M/F"] == ad["M/F"] and r["ID"] not in used_ids),
+        key=lambda r: (abs(_age(r) - _age(ad)), r["ID"]))
     if not ref_pool:
-        raise RuntimeError(f"no CDR 0 {ad['M/F']} reference subject with GM maps on disk")
+        return None
     return ref_pool[0], ad
 
 
@@ -465,20 +618,48 @@ def age_band(age: int) -> str:
     return f"{lo}-{lo + 9}"
 
 
-def build_alzheimers(case_id="oasis-001") -> dict:
+def build_alzheimers_cases(n: int) -> list[dict]:
+    """Build up to n Alzheimer's cases across the AD_SEVERITY ladder (CDR 2 -> 1 -> 0.5).
+
+    Each severity that has a subject on disk becomes one case, oasis-001.. in that order,
+    so the picker spans moderate -> very mild atrophy. Subjects are not reused across cases.
+    """
+    rows = load_oasis_rows()
+    used: set[str] = set()
+    cases: list[dict] = []
+    for target_cdr, word in AD_SEVERITY:
+        if len(cases) >= n:
+            break
+        pair = select_oasis_pair(rows, target_cdr, used)
+        if pair is None:
+            print(f"alzheimers: no unused CDR {target_cdr} subject on disk; skipping "
+                  f"the '{word}' case")
+            continue
+        ref, ad = pair
+        used.update({ref["ID"], ad["ID"]})
+        cases.append(build_alzheimers(f"oasis-{len(cases) + 1:03d}", ref, ad, word))
+    return cases
+
+
+def build_alzheimers(case_id, ref: dict, ad: dict, severity: str) -> dict:
     """Cross-sectional atrophy evidence for Alzheimer's, from OASIS-1 VBM GM maps.
 
     HONESTY (docs/MEDICAL_ACCURACY.md "the atrophy caveat"): OASIS-1 ships no per-voxel
     atrophy mask and no same-patient longitudinal pair. So this is an honest cross-sectional
-    comparison of TWO DIFFERENT de-identified subjects -- a CDR 0 reference and a CDR 2 AD
-    case -- reusing the atrophy-pair renderer's baseline/followup slots (baseline = the CDR 0
-    reference, followup = the CDR 2 case). The affected-region set is the cited literature
-    pattern (AD_PATTERN), never a segmentation of this scan. The "different subjects, not
-    longitudinal" caveat is carried in every mapping's provenance and notes.
+    comparison of TWO DIFFERENT de-identified subjects -- a CDR 0 reference and an AD case at
+    the given CDR -- reusing the atrophy-pair renderer's baseline/followup slots (baseline =
+    the CDR 0 reference, followup = the AD case). The affected-region set is the cited
+    literature pattern (AD_PATTERN), never a segmentation of this scan. The "different
+    subjects, not longitudinal" caveat is carried in every mapping's provenance and notes.
     """
-    ref, ad = select_oasis_pair()
-    print(f"alzheimers: {case_id} <- reference {ref['ID']} (CDR {ref['CDR']}, {ref['M/F']}, "
-          f"{ref['Age']}y) vs case {ad['ID']} (CDR {ad['CDR']}, {ad['M/F']}, {ad['Age']}y)")
+    cached = _cached_case(case_id)
+    if cached is not None:
+        print(f"alzheimers: {case_id} ({severity}) <- reference {ref['ID']} vs case "
+              f"{ad['ID']} (cached)")
+        return cached
+    print(f"alzheimers: {case_id} ({severity}) <- reference {ref['ID']} (CDR {ref['CDR']}, "
+          f"{ref['M/F']}, {ref['Age']}y) vs case {ad['ID']} (CDR {ad['CDR']}, {ad['M/F']}, "
+          f"{ad['Age']}y)")
 
     out = ASSETS / "cases" / case_id
     out.mkdir(parents=True, exist_ok=True)
@@ -508,6 +689,8 @@ def build_alzheimers(case_id="oasis-001") -> dict:
         "case_id": case_id,
         "disorder_id": "alzheimers",
         "source_dataset": "OASIS-1",
+        "label": f"CDR {int(float(ad['CDR'])) if float(ad['CDR']).is_integer() else ad['CDR']} "
+                 f"({severity}) · {ad['M/F']}, {age_band(int(ad['Age']))}",
         # Only the de-identified bands OASIS provides, for the AD case subject. The reference
         # subject's bands live in the mapping provenance above (one meta slot per case).
         "anonymized_meta": {"age_band": age_band(int(ad["Age"])), "sex": ad["M/F"]},
@@ -581,8 +764,8 @@ def _space_of_mask(mask_path: Path) -> str:
     return "MNI" if space.upper().startswith("MNI") else space
 
 
-def select_stroke_case(cases: list[tuple[str, Path, Path]]) -> tuple[int, str, Path, Path]:
-    """Deterministically pick one demo case by lesion size. Returns (vol, sub, t1, mask)."""
+def _score_stroke_cases(cases: list[tuple[str, Path, Path]]) -> list[tuple[int, str, Path, Path]]:
+    """Attach a lesion voxel count to each (sub, t1, mask); sorted ascending by size."""
     import nibabel as nib
 
     scored = []
@@ -591,9 +774,43 @@ def select_stroke_case(cases: list[tuple[str, Path, Path]]) -> tuple[int, str, P
         scored.append((vol, sub, t1, m))
         if (i + 1) % 100 == 0:
             print(f"  ...scanned {i + 1}/{len(cases)} lesion masks")
+    return sorted(scored, key=lambda s: (s[0], s[1]))
+
+
+def _diverse_by_size(scored: list, n: int, factor: float = 1.4) -> list:
+    """Greedily pick n items whose sizes are genuinely different, not near-duplicates.
+
+    `scored` is sorted ascending by voxel count (index 0). Take the smallest, then each next
+    item at least `factor`x the last taken, so a cluster of same-size lesions (e.g. several
+    ~15 cc subjects) contributes only one case and the picks actually span small -> large.
+    If the growth rule yields fewer than n, top up from the rest by even spread.
+    """
+    picked, last = [], 0
+    for s in scored:
+        if not picked or s[0] >= factor * last:
+            picked.append(s)
+            last = s[0]
+        if len(picked) >= n:
+            break
+    if len(picked) < n:
+        rest = [s for s in scored if s not in picked]
+        picked = sorted(picked + spread_pick(rest, n - len(picked)), key=lambda s: (s[0], s[1]))
+    return picked[:n]
+
+
+def select_stroke_cases(cases: list[tuple[str, Path, Path]], n: int
+                        ) -> list[tuple[int, str, Path, Path]]:
+    """Pick n demo lesions spread across size. Returns [(vol, sub, t1, mask)] small->large.
+
+    Scores every extracted subject by lesion voxel count, keeps those in the legible
+    territorial-lesion window [MIN, MAX] (falling back to all if that window is empty), then
+    picks a size-diverse set so the picker spans a small focal infarct -> a large one, in
+    whichever regions the real masks happen to hit. Deterministic.
+    """
+    scored = _score_stroke_cases(cases)
     in_range = [s for s in scored if STROKE_MIN_VOXELS <= s[0] <= STROKE_MAX_VOXELS]
     pool = in_range or scored
-    return min(pool, key=lambda s: (abs(s[0] - STROKE_TARGET_VOXELS), s[1]))
+    return _diverse_by_size(pool, n)
 
 
 def _resample_mask_to_labelgrid(mask_path: Path, labels_nii: Path, out_path: Path) -> str:
@@ -626,38 +843,51 @@ def _resample_mask_to_labelgrid(mask_path: Path, labels_nii: Path, out_path: Pat
     return note
 
 
-def build_stroke(case_id="atlas-001") -> dict | None:
-    """Ischemic-stroke case from ATLAS 3.0 -- the same lesion-overlay path as tumor.
+def build_strokes(n: int) -> list[dict]:
+    """Wire up to n ischemic-stroke cases from ATLAS 3.0, spread across lesion size.
 
-    The release in hand is "ATLAS3_Training_Raw", whose T1w and lesion masks are in NATIVE
-    scanner space (BIDS `space-orig`), NOT the MNI-normalized ATLAS release. So this takes
-    the same registration path as tumor: the brain-extracted `desc-brain` T1w is affine-
-    registered to MNI152 with dipy and the mask is warped along with it, before being
-    intersected with the DK+aseg labelmap. Region involvement is COMPUTED from the actual
-    lesion mask (root CLAUDE.md golden rules 1-2), never guessed from what a stroke
-    "usually" hits.
+    Ischemic stroke reuses the tumor lesion-overlay path. The release in hand is
+    "ATLAS3_Training_Raw", whose T1w and lesion masks are in NATIVE scanner space (BIDS
+    `space-orig`), NOT the MNI-normalized release; each case is registered to MNI152 before
+    the atlas overlap (see build_one_stroke). Region involvement is COMPUTED from the actual
+    lesion mask (root CLAUDE.md golden rules 1-2), never guessed.
 
-    Do NOT switch this to register=False without checking the release: for these native
-    images the brain sits tens of mm off the MNI brain, so a world-coordinate reslice
-    alone produces confidently wrong regions. See _space_of_mask.
-
-    Returns None (and leaves ischemic-stroke unwired) when the ATLAS download has not been
+    Returns [] (ischemic-stroke stays unwired) when the ATLAS download has not been
     extracted yet, so `python3 backend/build_dataset.py` still runs today. Once the
     encrypted tarball is decrypted (key in data/raw/stroke/key.txt) and extracted under
-    data/raw/stroke/, re-running wires the case with no code change.
+    data/raw/stroke/, re-running wires the cases with no code change.
     """
     if not STROKE_DIR.exists():
-        return None
+        return []
     cases = _find_atlas_stroke_cases()
     if not cases:
         print("stroke: no extracted ATLAS data under data/raw/stroke yet; skipping "
               "(ischemic-stroke stays unwired). Decrypt + extract the download, then "
               "re-run build_dataset.py.")
-        return None
+        return []
 
-    print(f"stroke: {len(cases)} ATLAS subject(s) found; selecting a demo lesion")
-    vol, sub, t1_src, mask_src = select_stroke_case(cases)
-    print(f"  selected {sub}: lesion = {vol} voxels (~{vol / 1000:.1f} cc), from {mask_src.name}")
+    print(f"stroke: {len(cases)} ATLAS subject(s) found; selecting up to {n} demo lesions "
+          f"spread across size")
+    selected = select_stroke_cases(cases, n)
+    built = []
+    for i, (vol, sub, t1_src, mask_src) in enumerate(selected):
+        built.append(build_one_stroke(f"atlas-{i + 1:03d}", vol, sub, t1_src, mask_src))
+    return built
+
+
+def build_one_stroke(case_id: str, vol: int, sub: str, t1_src: Path, mask_src: Path) -> dict:
+    """One ATLAS ischemic-stroke case: ship the native T1w + mask, compute the atlas overlap.
+
+    Do NOT switch this to register=False without checking the release: for these native
+    images the brain sits tens of mm off the MNI brain, so a world-coordinate reslice alone
+    produces confidently wrong regions. See _space_of_mask.
+    """
+    cached = _cached_case(case_id)
+    if cached is not None:
+        print(f"stroke: {case_id} <- {sub} (cached, skipping registration)")
+        return cached
+    print(f"stroke: {case_id} <- {sub}: lesion = {vol} voxels (~{vol / 1000:.1f} cc), "
+          f"from {mask_src.name}")
 
     out = ASSETS / "cases" / case_id
     out.mkdir(parents=True, exist_ok=True)
@@ -703,6 +933,8 @@ def build_stroke(case_id="atlas-001") -> dict | None:
         "case_id": case_id,
         "disorder_id": "ischemic-stroke",
         "source_dataset": "ATLAS 3.0",
+        # Native ATLAS mask voxel count, not the MNI-warped count, is the true lesion size.
+        "label": lesion_label(mappings, vol),
         # ATLAS's public release ships no per-subject de-identified age/sex we can cite,
         # so we invent nothing (root CLAUDE.md golden rule 1; backend CLAUDE.md meta rule).
         "anonymized_meta": {},
@@ -720,20 +952,205 @@ def build_stroke(case_id="atlas-001") -> dict | None:
     return case
 
 
-def build_disorders(case_ids: dict):
+# --------------------------------------------------------------------------- #
+# hemorrhagic stroke (CT-ICH) -- same lesion-overlay path, CT registered to MNI
+# --------------------------------------------------------------------------- #
+
+# Where the CT-ICH download can land. Two shapes are tolerated: the staging path the
+# helper script uses (data/raw/hemorrhage/...) and a raw `wget -r` PhysioNet mirror
+# (data/raw/physionet.org/files/ct-ich/<ver>/...). Both are searched for a ct_scans/
+# dir beside a masks/ dir; data/raw is gitignored, so neither is ever committed.
+HEMORRHAGE_ROOTS = [RAW / "hemorrhage", RAW / "physionet.org"]
+HEMORRHAGE_MIN_VOXELS = 50  # exclude the dataset's no-bleed (normal) scans and trivial specks
+
+
+def _find_hemorrhage_cases() -> list[tuple[str, Path, Path]]:
+    """Discover staged CT-ICH subjects as (patient_id, ct_scan, mask).
+
+    Searches every HEMORRHAGE_ROOTS location for a `ct_scans/` dir beside a `masks/`
+    dir, so it works whether the data was staged by the helper script or pulled as a
+    raw PhysioNet mirror. A scan counts only when its same-named mask exists;
+    completeness/bleed filtering happens in build_hemorrhages, not here.
+    """
+    cases = []
+    for root in HEMORRHAGE_ROOTS:
+        if not root.exists():
+            continue
+        for ct_dir in sorted(root.rglob("ct_scans")):
+            mask_dir = ct_dir.parent / "masks"
+            if not mask_dir.is_dir():
+                continue
+            for scan in sorted(ct_dir.glob("*.nii*")):
+                mask = mask_dir / scan.name
+                if mask.exists():
+                    cases.append((scan.stem, scan, mask))
+    return cases
+
+
+def _nifti_loads_fully(path: Path) -> bool:
+    """True only if the whole image array can be read.
+
+    Rejects a still-downloading, truncated NIfTI: its 352-byte header reads fine and
+    reports a full shape, but reading the voxel data raises OSError once the file runs
+    short. This is what keeps a partial `wget` mirror from producing garbage overlaps.
+    """
+    import nibabel as nib
+
+    try:
+        np.asarray(nib.load(str(path)).dataobj)
+        return True
+    except (OSError, EOFError, ValueError):
+        return False
+
+
+def _hemorrhage_voxels(mask_path: Path) -> int | None:
+    """Non-zero bleed voxels in a mask, or None if the file can't be fully read.
+
+    Forces a full array read so a truncated (still-downloading) mask is rejected rather
+    than silently under-counted.
+    """
+    import nibabel as nib
+
+    try:
+        return int(np.count_nonzero(np.asarray(nib.load(str(mask_path)).dataobj)))
+    except (OSError, EOFError, ValueError):
+        return None
+
+
+def build_hemorrhages(n: int) -> list[dict]:
+    """Wire up to n hemorrhagic-stroke cases from CT-ICH (Hssayeni et al., 2020).
+
+    Dormant until the DUA-gated download is staged under data/raw/hemorrhage (returns [],
+    leaving hemorrhagic-stroke listed but unwired). CT-ICH ships CT + per-slice hemorrhage
+    masks in native CT space, so each is registered to MNI152 (dipy affine, mutual
+    information) before the atlas overlap -- the same grounded path as tumor/stroke, just
+    cross-modality (CT -> T1 template). That registration is APPROXIMATE across modalities;
+    it is labelled so in every mapping's provenance and everything ships pending review.
+
+    NOTE(neuro-review): CT->MNI mutual-information registration has not been validated on
+    this dataset yet; if regions look implausible when the data lands, tune the registration
+    (e.g. intensity clipping of the CT to a brain window) before trusting the overlap.
+    """
+    cases = _find_hemorrhage_cases()
+    if not cases:
+        print("hemorrhage: no CT-ICH data under data/raw/{hemorrhage,physionet.org} yet; "
+              "skipping (hemorrhagic-stroke stays listed but unwired). Sign the PhysioNet "
+              "DUA, download, then re-run build_dataset.py.")
+        return []
+
+    # Keep only fully-downloaded pairs with a real bleed. A raw `wget` mirror is often
+    # still in flight (truncated NIfTIs) and CT-ICH includes no-hemorrhage scans; both
+    # are dropped here so a partial download simply leaves hemorrhagic-stroke unwired
+    # rather than emitting garbage overlaps.
+    scored = []
+    skipped_partial = 0
+    for pid, ct, m in cases:
+        vol = _hemorrhage_voxels(m)
+        if vol is None or not _nifti_loads_fully(ct):
+            skipped_partial += 1
+            continue
+        if vol < HEMORRHAGE_MIN_VOXELS:
+            continue
+        scored.append((vol, pid, ct, m))
+    if skipped_partial:
+        print(f"hemorrhage: skipped {skipped_partial}/{len(cases)} still-downloading or "
+              f"unreadable CT/mask pair(s)")
+    if not scored:
+        print("hemorrhage: no complete CT-ICH subject with a bleed yet; skipping "
+              "(hemorrhagic-stroke stays listed but unwired). Re-run once the download finishes.")
+        return []
+
+    scored.sort(key=lambda s: (s[0], s[1]))
+    selected = spread_pick(scored, n)
+    print(f"hemorrhage: {len(scored)} complete CT-ICH subject(s) with a bleed; building "
+          f"{len(selected)} spread across bleed size")
+    built = []
+    for i, (vol, pid, ct_src, mask_src) in enumerate(selected):
+        built.append(build_one_hemorrhage(f"ctich-{i + 1:03d}", vol, pid, ct_src, mask_src))
+    return built
+
+
+def build_one_hemorrhage(case_id: str, vol: int, pid: str, ct_src: Path, mask_src: Path) -> dict:
+    """One CT-ICH hemorrhage case: ship the CT + mask, compute the atlas overlap via CT->MNI."""
+    cached = _cached_case(case_id)
+    if cached is not None:
+        print(f"hemorrhage: {case_id} <- patient {pid} (cached, skipping registration)")
+        return cached
+    print(f"hemorrhage: {case_id} <- patient {pid}: bleed = {vol} voxels, from {mask_src.name}")
+
+    out = ASSETS / "cases" / case_id
+    out.mkdir(parents=True, exist_ok=True)
+    # Keep the mask on the CT's own grid for the frontend overlay; only the overlap needs MNI.
+    shutil.copyfile(ct_src, out / "base.nii.gz")
+    shutil.copyfile(mask_src, out / "mask.nii.gz")
+
+    from lesion_overlap import compute_region_mappings
+
+    source_note = (f"hemorrhage = CT-ICH manual hemorrhage segmentation (patient {pid}), "
+                   f"native CT space. CT-ICH is not MNI-normalized, so the bleed reaches "
+                   f"atlas space via its own CT; CT->T1-template registration is "
+                   f"cross-modality and approximate (see NOTE(neuro-review) in build code).")
+    mappings, qc = compute_region_mappings(
+        ct_src, mask_src, register=True, lesion_values=None,
+        moving_space="CT-ICH native scanner space (CT)", source_note=source_note,
+    )
+    print(f"  overlap: {qc['regions_touched']} regions touched, primary={qc['primary']} "
+          f"({qc['lesion_voxels_in_labelled_brain']}/{qc['lesion_voxels_in_mni']} "
+          f"bleed voxels inside a labelled region)")
+
+    case = {
+        "case_id": case_id,
+        "disorder_id": "hemorrhagic-stroke",
+        "source_dataset": "CT-ICH",
+        "label": lesion_label(mappings, vol),
+        # CT-ICH ships de-identified age/sex in Patient_demographics.csv; wired when the data
+        # lands and the exact column names are confirmed (TODO(neuro-review)).
+        "anonymized_meta": {},
+        "report_summary": "NEEDS_SOURCE",
+        "evidence": {
+            "renderer": "lesion-overlay",
+            "base": f"/assets/cases/{case_id}/base.nii.gz",
+            "mask": f"/assets/cases/{case_id}/mask.nii.gz",
+            "mask_labels": {"1": "hemorrhage"},
+        },
+        "region_mappings": mappings,
+        "review_status": "pending",
+    }
+    write_json_both(f"cases/{case_id}.json", case)
+    return case
+
+
+def build_disorders(cases_by_disorder: dict[str, list[dict]]):
+    """cases_by_disorder maps disorder_id -> the built case dicts (in picker order).
+
+    Each disorder carries both `case_ids` (the join key the validator checks) and a
+    parallel `cases` list of {case_id, label} so the frontend picker can show a descriptive
+    label per case without fetching every case JSON. `cases` is an additive, optional field
+    (docs/DATA_CONTRACT.md); the validator ignores it.
+    """
     def cids(key: str) -> list[str]:
-        v = case_ids.get(key)
-        return [v] if v else []  # empty until that disorder's case is built
+        return [c["case_id"] for c in cases_by_disorder.get(key, [])]
+
+    def clabels(key: str) -> list[dict]:
+        return [{"case_id": c["case_id"], "label": c.get("label", c["case_id"])}
+                for c in cases_by_disorder.get(key, [])]
 
     disorders = [
         {"disorder_id": "glioma", "name": "Glioma (brain tumor)", "category": "structural",
-         "evidence_renderer": "lesion-overlay", "case_ids": cids("glioma")},
+         "evidence_renderer": "lesion-overlay", "case_ids": cids("glioma"),
+         "cases": clabels("glioma")},
         {"disorder_id": "ischemic-stroke", "name": "Ischemic stroke", "category": "structural",
-         "evidence_renderer": "lesion-overlay", "case_ids": cids("ischemic-stroke")},
+         "evidence_renderer": "lesion-overlay", "case_ids": cids("ischemic-stroke"),
+         "cases": clabels("ischemic-stroke")},
+        {"disorder_id": "hemorrhagic-stroke", "name": "Hemorrhagic stroke", "category": "structural",
+         "evidence_renderer": "lesion-overlay", "case_ids": cids("hemorrhagic-stroke"),
+         "cases": clabels("hemorrhagic-stroke")},
         {"disorder_id": "epilepsy", "name": "Epilepsy (seizure)", "category": "functional",
-         "evidence_renderer": "eeg", "case_ids": cids("epilepsy")},
+         "evidence_renderer": "eeg", "case_ids": cids("epilepsy"),
+         "cases": clabels("epilepsy")},
         {"disorder_id": "alzheimers", "name": "Alzheimer's disease", "category": "neurodegenerative",
-         "evidence_renderer": "atrophy-pair", "case_ids": cids("alzheimers")},
+         "evidence_renderer": "atrophy-pair", "case_ids": cids("alzheimers"),
+         "cases": clabels("alzheimers")},
     ]
     # Literature-level typical patterns (docs/MEDICAL_ACCURACY.md type 2). Only Alzheimer's
     # has a cited pattern here; tumor/stroke stay empty (their involvement is per-case computed,
@@ -760,16 +1177,32 @@ def build_disorders(case_ids: dict):
 
 
 def main():
+    global FORCE_REBUILD
+    FORCE_REBUILD = "--force" in sys.argv[1:]
+    if FORCE_REBUILD:
+        print("--force: ignoring cached case JSON, rebuilding every case from raw data")
+
     build_atlas()
-    tumor = build_tumor()
-    epilepsy = build_epilepsy()
-    alzheimers = build_alzheimers()
-    stroke = build_stroke()  # None until the ATLAS v2.0 download is decrypted + extracted
+
+    tumors = [build_tumor(cid, src) for cid, src in select_tumor_cases(N_TUMOR_CASES)]
+
+    epilepsy = [c for c in
+                (build_epilepsy(cid, edf, on, off)
+                 for cid, edf, on, off in select_epilepsy_cases(3))
+                if c is not None]
+
+    alzheimers = build_alzheimers_cases(3)
+
+    # None until the ATLAS download is decrypted + extracted / CT-ICH DUA download is staged.
+    strokes = build_strokes(N_STROKE_CASES)
+    hemorrhages = build_hemorrhages(N_HEMORRHAGE_CASES)
+
     build_disorders({
-        "glioma": tumor["case_id"],
-        "epilepsy": epilepsy["case_id"],
-        "alzheimers": alzheimers["case_id"],
-        "ischemic-stroke": stroke["case_id"] if stroke else None,
+        "glioma": tumors,
+        "ischemic-stroke": strokes,
+        "hemorrhagic-stroke": hemorrhages,
+        "epilepsy": epilepsy,
+        "alzheimers": alzheimers,
     })
     print("\ndone. JSON -> contract/fixtures + frontend/public/data ; "
           "assets -> frontend/public/assets")

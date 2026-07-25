@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useRef } from "react";
+import { Suspense, useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import type { WebGLRenderer } from "three";
 import { OrbitControls } from "@react-three/drei";
@@ -8,7 +8,10 @@ import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import * as THREE from "three";
 
 import { BrainLayer } from "./BrainLayer";
+import { DetailLayer } from "./DetailLayer";
+import { TISSUE } from "@/lib/atlas/tissue";
 import {
+  DETAIL_LAYERS,
   useAtlasStore,
   type ViewPreset,
 } from "@/store/useAtlasStore";
@@ -33,11 +36,6 @@ import { recordPointerDown, wasDragged } from "@/lib/atlas/pointerDrag";
  * explicit offset to orbit around its visual centre.
  */
 const MNI_BBOX_CENTER: [number, number, number] = [-0.45, -14.85, 0.7];
-
-/** Tissue tones. A richer anatomical rose cortex over cooler grey-blue deep
- *  structures, so the surface reads as living tissue rather than pale clay. */
-const CORTICAL_TISSUE = "#d9948c";
-const SUBCORTICAL_TISSUE = "#93a1ba";
 
 const WHOLE_BRAIN_DISTANCE = 415;
 const FOCUS_DISTANCE = 185;
@@ -179,20 +177,101 @@ function ViewRig({
  */
 const LIGHTING = {
   light: {
-    hemi: { intensity: 0.85, color: "#eef4fc", ground: "#c9d2df" },
-    ambient: 0.34,
-    key: 2.0,
-    fill: 0.85,
-    back: 0.95,
+    hemi: { intensity: 0.8, color: "#eef4fc", ground: "#c9d2df" },
+    ambient: 0.3,
+    key: 1.85,
+    fill: 0.7,
+    back: 1.0,
   },
   dark: {
-    hemi: { intensity: 0.5, color: "#cdd8e8", ground: "#12161d" },
-    ambient: 0.14,
-    key: 2.1,
-    fill: 0.7,
-    back: 1.25,
+    hemi: { intensity: 0.46, color: "#cdd8e8", ground: "#12161d" },
+    ambient: 0.13,
+    key: 2.0,
+    fill: 0.6,
+    back: 1.35,
   },
 } as const;
+
+/**
+ * The key/fill/rim rig, expressed in *camera* space: +x right of the viewer,
+ * +y above them, +z behind them. The whole rig is re-seated on the camera every
+ * frame, so the brain is lit from wherever the user is standing instead of from
+ * a fixed point in the model. That is what keeps every orbit angle readable —
+ * a world-anchored key inevitably leaves some side of the brain in shadow, and
+ * on a model the user is meant to rotate freely that shadow is dead screen.
+ *
+ * Offsets are directions, not places: a directional light has no falloff, so
+ * only the vector from the light to the rig origin matters.
+ */
+const VIEWER_LIGHTS = [
+  // Key: above and to the viewer's left, forward of them. Off-axis enough to
+  // model the gyri — a light straight down the camera axis flattens them out.
+  { offset: [-0.62, 0.52, 0.58], color: "#fff3ea" },
+  // Fill: opposite side, slightly below, lifting the shadowed half.
+  { offset: [0.78, -0.16, 0.42], color: "#9ec5ff" },
+  // Rim: past the brain and shining back at the viewer, for the edge separation
+  // that keeps the silhouette off the stage.
+  { offset: [0.18, 0.62, -1.0], color: "#cfe0ff" },
+] as const;
+
+/** Rig radius. Irrelevant to a directional light's shading, but keeping it near
+ *  the camera distance keeps the helper geometry sane if it is ever debugged. */
+const LIGHT_DISTANCE = 400;
+
+/**
+ * Parents the key/fill/rim rig to the camera.
+ *
+ * The lights sit in a group whose transform is copied from the camera each
+ * frame. Their shared target is the group's own origin, so each light's
+ * direction is its fixed camera-space offset and nothing else — orbiting turns
+ * the model under a stationary rig rather than dragging the model through
+ * fixed light.
+ */
+function ViewerLights({
+  preset,
+}: {
+  preset: (typeof LIGHTING)[keyof typeof LIGHTING];
+}) {
+  const camera = useThree((s) => s.camera);
+  const rig = useRef<THREE.Group>(null);
+
+  /**
+   * The shared aim point, parented inside the rig. Without it each light would
+   * fall back to three's default target at the *world* origin, which makes the
+   * light direction depend on how far the camera has zoomed — the rig would
+   * subtly swing as the user dollies in. Aiming at the rig's own origin keeps
+   * every direction fixed in camera space at any distance.
+   */
+  const target = useMemo(() => new THREE.Object3D(), []);
+
+  const intensities = [preset.key, preset.fill, preset.back];
+
+  useFrame(() => {
+    const group = rig.current;
+    if (!group) return;
+    group.position.copy(camera.position);
+    group.quaternion.copy(camera.quaternion);
+  });
+
+  return (
+    <group ref={rig}>
+      <primitive object={target} />
+      {VIEWER_LIGHTS.map(({ offset, color }, index) => (
+        <directionalLight
+          key={color}
+          color={color}
+          intensity={intensities[index]}
+          target={target}
+          position={[
+            offset[0] * LIGHT_DISTANCE,
+            offset[1] * LIGHT_DISTANCE,
+            offset[2] * LIGHT_DISTANCE,
+          ]}
+        />
+      ))}
+    </group>
+  );
+}
 
 export function AtlasCanvas() {
   const selectRegion = useAtlasStore((s) => s.selectRegion);
@@ -259,6 +338,8 @@ export function AtlasCanvas() {
         map is a network fetch for a CDN asset, and the app must run fully
         offline on a reviewer's machine. A warm key, a cool fill, and a cool
         back-rim give the tissue form and a clean silhouette off the dark stage.
+        The rig rides the camera (see ViewerLights); the ambient and hemisphere
+        terms stay world-anchored so the model keeps a faint sense of up.
       */}
       <hemisphereLight
         intensity={light.hemi.intensity}
@@ -266,21 +347,7 @@ export function AtlasCanvas() {
         groundColor={light.hemi.ground}
       />
       <ambientLight intensity={light.ambient} />
-      <directionalLight
-        position={[-190, 240, -150]}
-        intensity={light.key}
-        color="#fff3ea"
-      />
-      <directionalLight
-        position={[230, 50, 180]}
-        intensity={light.fill}
-        color="#9ec5ff"
-      />
-      <directionalLight
-        position={[60, 130, -260]}
-        intensity={light.back}
-        color="#cfe0ff"
-      />
+      <ViewerLights preset={light} />
 
       <Suspense fallback={null}>
         <group rotation={[-Math.PI / 2, 0, 0]}>
@@ -294,13 +361,16 @@ export function AtlasCanvas() {
             <BrainLayer
               url="/assets/atlas/brain-cortical.glb"
               layer="cortical"
-              tissueColor={CORTICAL_TISSUE}
+              tissueColor={TISSUE.cortex}
             />
             <BrainLayer
               url="/assets/atlas/brain-subcortical.glb"
               layer="subcortical"
-              tissueColor={SUBCORTICAL_TISSUE}
+              tissueColor={TISSUE.subcortical}
             />
+            {DETAIL_LAYERS.map((layer) => (
+              <DetailLayer key={layer} layer={layer} />
+            ))}
           </group>
         </group>
       </Suspense>

@@ -12,6 +12,13 @@ python3 backend/build_dataset.py       # writes JSON + assets
 python3 contract/validate.py --check-assets
 ```
 
+Case building (the dipy affine registration to MNI152 for tumor/stroke/hemorrhage) is
+the expensive step, minutes per case. A re-run reuses any case whose JSON already
+exists under `contract/fixtures/cases/` instead of rebuilding it, so touching
+unrelated code (e.g. `disorders.json` shape) and re-running is fast. Pass `--force` to
+ignore the cache and rebuild every case from raw data, or delete a specific
+`contract/fixtures/cases/<case_id>.json` to force-rebuild just that one case.
+
 ## What `build_dataset.py` produces
 
 Committed to git:

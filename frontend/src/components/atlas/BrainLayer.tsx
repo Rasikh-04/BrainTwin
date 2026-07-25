@@ -8,6 +8,7 @@ import * as THREE from "three";
 import { useAtlasStore, type LayerKey } from "@/store/useAtlasStore";
 import { wasDragged } from "@/lib/atlas/pointerDrag";
 import { regionColor } from "@/lib/atlas/regionColor";
+import { createSurfaceMaterial } from "@/lib/atlas/tissue";
 
 /**
  * Renders one atlas glb (cortical or subcortical).
@@ -73,29 +74,7 @@ export function BrainLayer({ url, layer, tissueColor }: BrainLayerProps) {
     scene.traverse((object) => {
       if (!(object instanceof THREE.Mesh)) return;
 
-      // Physical material with a faint clearcoat reads as living tissue under
-      // the studio lights: matte gyral surface with a soft wet sheen in the
-      // sulci, instead of the flat clay of a plain standard material. Sheen
-      // adds the slight backscatter that makes a brain look soft, not carved.
-      //
-      // DoubleSide is what stops the brain reading as a hollow shell: the atlas
-      // meshes are open surfaces, so with front-face-only culling you see
-      // straight through to nothing at the brainstem opening and whenever a
-      // region is isolated. Rendering the back faces gives every cut an inner
-      // wall, so the tissue looks solid.
-      const material = new THREE.MeshPhysicalMaterial({
-        color: baseColor.clone(),
-        roughness: 0.6,
-        metalness: 0,
-        clearcoat: 0.24,
-        clearcoatRoughness: 0.48,
-        sheen: 0.55,
-        sheenRoughness: 0.85,
-        sheenColor: new THREE.Color("#ffcabf"),
-        side: THREE.DoubleSide,
-        flatShading: false,
-      });
-      object.material = material;
+      object.material = createSurfaceMaterial(baseColor);
       object.castShadow = false;
       object.receiveShadow = false;
       byRegionId.set(object.name, object);

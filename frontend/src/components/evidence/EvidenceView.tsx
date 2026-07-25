@@ -84,6 +84,9 @@ export function EvidenceView({ activeCase }: { activeCase: Case }) {
           <h2 className="t-head font-semibold leading-snug text-ink">
             {activeCase.case_id}
           </h2>
+          {activeCase.label && (
+            <p className="t-body mt-1 text-ink-muted">{activeCase.label}</p>
+          )}
           <p className="ident mt-1">
             {activeCase.source_dataset} &middot; {activeCase.evidence.renderer}
           </p>
