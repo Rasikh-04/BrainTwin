@@ -50,12 +50,26 @@ export interface TypicalAffectedRegion {
   note: string;
 }
 
+/**
+ * A case reference carrying a short, human-readable descriptor for the case picker
+ * (e.g. "Right caudalmiddlefrontal · ~15 cc"). The label is derived by the backend
+ * from computed data (top overlap region + lesion size, CDR severity, or seizure
+ * onset) — never authored in the UI. Additive/optional in the contract; when absent
+ * the UI falls back to the case_id.
+ */
+export interface DisorderCaseRef {
+  case_id: string;
+  label: string;
+}
+
 export interface Disorder {
   disorder_id: string;
   name: string;
   category: DisorderCategory;
   evidence_renderer: EvidenceRenderer;
   case_ids: string[];
+  /** Parallel to case_ids, with a picker label per case. Optional (additive field). */
+  cases?: DisorderCaseRef[];
   description: SourcedText;
   description_source: string | null;
   typical_affected_regions: TypicalAffectedRegion[];
@@ -115,6 +129,9 @@ export interface Case {
   case_id: string;
   disorder_id: string;
   source_dataset: string;
+  /** Short human descriptor for the picker/header, derived by the backend from computed
+   * data (top overlap region + size, CDR severity, or seizure onset). Optional/additive. */
+  label?: string;
   anonymized_meta: AnonymizedMeta;
   report_summary: SourcedText;
   evidence: Evidence;
