@@ -10,9 +10,22 @@ import {
 const LAYER_LABELS: Record<LayerKey, string> = {
   cortical: "Cortex",
   subcortical: "Subcortical",
-  veins: "Veins",
+  // Not "Veins". The source model contains no cerebral veins at all -- no great
+  // cerebral vein, no internal cerebral vein, no cortical veins -- only the
+  // dural sinuses. Labelling this "Veins" would claim a cerebral venous anatomy
+  // that is not in the mesh. The store key stays `veins` because it is wiring.
+  veins: "Dural sinuses",
   arteries: "Arteries",
-  nerves: "Nerves",
+  nerves: "Cranial nerves",
+};
+
+/** What each detailing layer actually contains, for its tooltip. */
+const LAYER_CONTENTS: Partial<Record<LayerKey, string>> = {
+  veins:
+    "Dural venous sinuses only (superior and inferior sagittal, straight, transverse, sigmoid, cavernous, petrosal). The source model has no cerebral veins.",
+  arteries:
+    "Cerebral arterial tree: circle of Willis, the anterior, middle and posterior cerebral arteries with named cortical branches, and the posterior fossa arteries.",
+  nerves: "The twelve cranial nerves, clipped at the cranial cavity.",
 };
 
 function LayerToggle({
@@ -34,7 +47,7 @@ function LayerToggle({
       title={
         pending
           ? "Detailing mesh not loaded yet — see docs/ASSET_SOURCING.md"
-          : `Toggle ${LAYER_LABELS[layer]} layer`
+          : (LAYER_CONTENTS[layer] ?? `Toggle ${LAYER_LABELS[layer]} layer`)
       }
       className={`t-ctl flex items-center gap-1.5 rounded px-2.5 py-1 transition-colors ${
         pending
@@ -67,10 +80,10 @@ function LayerToggle({
 /**
  * Layer visibility and dissection helpers for the atlas.
  *
- * Brain layers are live. The three detailing layers (veins, arteries, nerves)
- * are wired but their meshes are sourced separately (docs/ASSET_SOURCING.md),
- * so they render as disabled toggles until an asset is present — honest about
- * what is and is not in the model.
+ * Brain layers are live, and so are the three detailing layers, whose meshes
+ * come from Z-Anatomy via backend/export_detailing.py. Their labels name what
+ * the mesh actually contains rather than what the layer is called in the store
+ * — see LAYER_LABELS.
  *
  * "Ghost cortex" fades the cortical surface so subcortical structures can be
  * seen and picked through it — a material opacity change only, never a geometry
@@ -133,7 +146,7 @@ export function LayerControls() {
           Detailing
         </span>
         {DETAIL_LAYERS.map((layer) => (
-          <LayerToggle key={layer} layer={layer} pending />
+          <LayerToggle key={layer} layer={layer} />
         ))}
       </div>
     </div>
