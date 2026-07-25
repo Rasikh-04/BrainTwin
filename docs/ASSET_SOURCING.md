@@ -1,9 +1,12 @@
 # Asset sourcing: vessels and nerves (detailing layers)
 
-This documents where the veins, arteries, and cranial-nerve meshes come from,
-and how to turn them into the glbs the frontend detailing layers expect. The
-frontend already has the layers wired (`veins`, `arteries`, `nerves` in the
-layer controls); they render as disabled "soon" toggles until a mesh is present.
+This documents where the vessel and cranial-nerve meshes come from, and how they
+become the glbs the frontend detailing layers load.
+
+Status: done and reproducible. `backend/export_detailing.py` builds all three
+layers from the downloaded source in one headless Blender run, and
+`backend/verify_detailing_alignment.py` checks the result against the atlas. The
+layer toggles are live.
 
 Why this is a separate step, not something baked in the last session: the brain
 in your `Brain_reference_anatomy.jpeg` reference is from **Visible Body / Human
@@ -15,8 +18,12 @@ alignment pass. That alignment is the real work here.
 ## Recommended source: Z-Anatomy (one coherent atlas, all three layers)
 
 - Project: https://www.z-anatomy.com/
-- Code / meshes: https://github.com/LluisV/Z-Anatomy (Blender files, per-region
-  named objects for arteries, veins, and cranial nerves)
+- Code / meshes: https://github.com/LluisV/Z-Anatomy. Note that despite the name,
+  the repo ships its geometry as **FBX**, under
+  `Resources/Models/FBX/`. The only `.blend` files in it are French text
+  definitions and a label script, and neither contains geometry. Objects are
+  named with real anatomical terms (`Basilar artery`, `Optic nerve (II).l`),
+  which is what makes the selection scriptable.
 - License: CC-BY-SA 4.0 (attribution + share-alike). Safe to redistribute the
   derived glbs **if** we keep the attribution and license. This matters because
   our atlas glbs are already CC-licensed and committed; the vessel glbs would be
@@ -28,27 +35,69 @@ all three detailing layers line up together.
 
 ### Turning it into our glbs
 
-1. Run `backend/download_detailing_assets.sh` (resumable) to pull the source.
-2. Open the `.blend` in Blender. Select only the cerebral structures you want
-   per layer (e.g. cerebral arteries incl. the circle of Willis; superficial and
-   deep cerebral veins / dural sinuses; the cranial nerves visible in the
-   reference). Delete the rest of the body.
-3. Name each object so its object name is stable — the frontend does not need
-   these to be `region_id`s (they are not atlas regions), but stable names help
-   future per-structure picking.
-4. Export three glbs: `veins.glb`, `arteries.glb`, `nerves.glb`.
-5. Decimate to keep each under a few hundred thousand verts total (the atlas
-   perf budget in `docs/PROGRESS.md` still applies; Draco is the next lever).
-6. Drop them in `frontend/public/assets/atlas/`.
+```
+bash backend/download_detailing_assets.sh          # resumable, pulls the source
+blender --background --python backend/export_detailing.py
+python3 backend/verify_detailing_alignment.py
+```
 
-### The alignment caveat (the part that needs care)
+The exporter writes `brain-arteries.glb`, `brain-veins.glb`, `brain-nerves.glb`
+and `detailing-manifest.json` into `frontend/public/assets/atlas/`. What it does
+per layer: pick the intracranial objects by anatomical name, clip them to the
+cranial cavity, rotate and scale into the atlas frame, merge, decimate to the
+vertex budget, export.
 
-Z-Anatomy is not in MNI space. Before the vessels sit correctly inside our
-brain, they need a scale + rotation + translation into the atlas frame. Do this
-as a single transform on each glb (or one shared parent transform), the same way
-`AtlasCanvas` already shares one transform across cortical and subcortical so the
-layers cannot drift apart. Eyeball it against the cortex, then verify a known
-landmark (e.g. the middle cerebral artery running in the lateral sulcus).
+Which objects belong to which layer lives in `backend/detailing_selection.py`,
+as commented name patterns rather than a hand-picked list, so the choice is
+reviewable without opening Blender. The manifest records the per-structure
+coordinates that came out, which is what a reviewer checks.
+
+Note the exporter passes `export_yup=False`. The atlas glbs store raw MNI
+coordinates with Z superior, and `AtlasCanvas` applies the Z-up to Y-up rotation
+once for every layer; letting the glTF exporter also convert would rotate these
+layers twice.
+
+### Alignment
+
+Z-Anatomy is a whole standing body in metres, oriented +X left, +Y posterior,
++Z superior. The atlas is millimetres in MNI RAS, +X right, +Y anterior, +Z
+superior. So the change of basis is a 180 degree rotation about Z (a proper
+rotation, not a mirror) plus a scale and a translation.
+
+The scale is exactly 1000. Z-Anatomy is modelled at true anatomical size, and
+its cerebral bounding box agrees with the atlas to about one percent on the two
+directly comparable axes (137.8 against 138.7 mm left-right, 117.8 against
+119.2 mm superoinferior). The translation is then whatever puts the two cerebral
+bounding-box centres together. Both constants are in `detailing_selection.py`.
+
+Bounding boxes only prove the scale. `verify_detailing_alignment.py` checks
+placement, using relationships that hold in every human brain: the pericallosal
+artery runs on the corpus callosum, the basilar artery lies on the front of the
+pons, the M1 segment passes under the putamen, the optic tract reaches the
+thalamus. It also asserts sidedness, since a sign error in the change of basis
+would mirror the model and nothing else would notice. Tolerances are loose on
+purpose: Z-Anatomy and the FreeSurfer atlas are different individuals, so a few
+millimetres of disagreement is anatomy rather than misalignment.
+
+### What is actually in each layer
+
+- **Arteries** — the cerebral arterial tree: internal carotid and vertebral
+  inflow, the circle of Willis, the anterior, middle and posterior cerebral
+  arteries with their named cortical branches, and the posterior fossa arteries
+  (PICA, AICA, superior cerebellar).
+- **Dural sinuses** — labelled that way, not "veins", because Z-Anatomy's
+  cardiovascular model contains **no cerebral veins at all**: no great cerebral
+  vein, no internal cerebral vein, no basal vein, no cortical or anastomotic
+  veins. Only the dural sinuses, the basilar plexus and the jugulars. Calling
+  the layer "Veins" would claim a cerebral venous anatomy that is not in the
+  mesh. Adding real cerebral veins needs a different source.
+- **Cranial nerves** — the twelve cranial nerves at their brainstem attachment
+  and cisternal course, clipped at the skull base. Their peripheral
+  distribution is deliberately excluded; the trigeminal divisions alone are
+  another organ's worth of face geometry.
+
+The two clip boxes differ for that reason, and both are documented with the
+measurements they came from in `detailing_selection.py`.
 
 ## Alternative sources
 
@@ -60,18 +109,28 @@ landmark (e.g. the middle cerebral artery running in the lateral sulcus).
   and coordinate frame vary per upload, so this is best for a single hero vessel
   (e.g. the arteries) rather than a matched set.
 
-## Wiring a mesh into the frontend once it exists
+## How it is wired in the frontend
 
-1. Add a `BrainLayer`-style loader for the detailing glb in `AtlasCanvas`, under
-   the same shared transform group as the brain layers (see the alignment
-   caveat). A detailing layer is simpler than `BrainLayer`: no `region_id` join,
-   just a colored mesh that the layer toggle shows/hides.
-2. In `LayerControls`, drop the `pending` prop from that layer's toggle so it
-   becomes live.
-3. Give each detailing layer a distinct, non-semantic color that does not
-   collide with the reserved medical accents (cyan select, ember/violet
-   involvement, amber pending). Vessels read naturally as desaturated red
-   (arteries) and blue (veins); nerves as pale yellow — matching the reference.
+`frontend/src/components/atlas/DetailLayer.tsx` renders one detailing glb. It
+sits inside the same shared transform group as the brain layers in
+`AtlasCanvas`, so the layers cannot drift apart, and it needs no per-layer
+correction because the geometry arrives already in the atlas frame.
+
+It is deliberately not `BrainLayer`. The parcellation layers join every mesh node
+to a `region_id` in `regions.json` and are individually pickable; a detailing
+layer is one merged mesh with no catalog entry, so reusing `BrainLayer` would
+fail its contract check on every load. Two other things follow from that:
+
+- Detailing meshes are removed from raycasting. A vessel drawn over the cortex
+  must not steal a click meant for the region underneath it.
+- The component only mounts while its layer is switched on. The glbs are several
+  megabytes each and most sessions never turn them on, so gating the mount keeps
+  them out of first paint. `useGLTF` caches by url, so switching a layer back on
+  is immediate.
+
+Colours live in `DETAIL_TISSUE` in `lib/atlas/tissue.ts`: arterial red, venous
+blue, ochre nerves. None collides with the reserved medical accents (cyan
+select, ember/violet involvement, amber pending).
 
 ## What must NOT happen
 
