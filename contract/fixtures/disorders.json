@@ -82,8 +82,30 @@
     "name": "Hemorrhagic stroke",
     "category": "structural",
     "evidence_renderer": "lesion-overlay",
-    "case_ids": [],
-    "cases": [],
+    "case_ids": [
+      "ctich-001",
+      "ctich-002",
+      "ctich-003",
+      "ctich-004"
+    ],
+    "cases": [
+      {
+        "case_id": "ctich-001",
+        "label": "Left Caudate \u00b7 ~0 cc"
+      },
+      {
+        "case_id": "ctich-002",
+        "label": "Right postcentral \u00b7 ~5 cc"
+      },
+      {
+        "case_id": "ctich-003",
+        "label": "Left paracentral \u00b7 ~9 cc"
+      },
+      {
+        "case_id": "ctich-004",
+        "label": "Left supramarginal \u00b7 ~130 cc"
+      }
+    ],
     "description": "NEEDS_SOURCE",
     "description_source": null,
     "typical_affected_regions": [],

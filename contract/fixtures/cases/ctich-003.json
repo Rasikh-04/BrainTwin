@@ -1,0 +1,228 @@
+{
+  "case_id": "ctich-003",
+  "disorder_id": "hemorrhagic-stroke",
+  "source_dataset": "CT-ICH",
+  "label": "Left paracentral \u00b7 ~9 cc",
+  "anonymized_meta": {},
+  "report_summary": "NEEDS_SOURCE",
+  "evidence": {
+    "renderer": "lesion-overlay",
+    "base": "/assets/cases/ctich-003/base.nii.gz",
+    "mask": "/assets/cases/ctich-003/mask.nii.gz",
+    "mask_labels": {
+      "1": "hemorrhage"
+    }
+  },
+  "region_mappings": [
+    {
+      "region_id": "ctx-lh-paracentral",
+      "role": "secondary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 1124,
+        "overlap_fraction_of_region": 0.0914
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. CT-ICH native scanner space (CT) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. hemorrhage = CT-ICH manual hemorrhage segmentation (patient 092), native CT space. CT-ICH is not MNI-normalized, so the bleed reaches atlas space via its own CT; CT->T1-template registration is cross-modality and approximate (see NOTE(neuro-review) in build code).",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-rh-supramarginal",
+      "role": "secondary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 1839,
+        "overlap_fraction_of_region": 0.0481
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. CT-ICH native scanner space (CT) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. hemorrhage = CT-ICH manual hemorrhage segmentation (patient 092), native CT space. CT-ICH is not MNI-normalized, so the bleed reaches atlas space via its own CT; CT->T1-template registration is cross-modality and approximate (see NOTE(neuro-review) in build code).",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-rh-superiortemporal",
+      "role": "secondary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 837,
+        "overlap_fraction_of_region": 0.0337
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. CT-ICH native scanner space (CT) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. hemorrhage = CT-ICH manual hemorrhage segmentation (patient 092), native CT space. CT-ICH is not MNI-normalized, so the bleed reaches atlas space via its own CT; CT->T1-template registration is cross-modality and approximate (see NOTE(neuro-review) in build code).",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-lh-posteriorcingulate",
+      "role": "secondary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 184,
+        "overlap_fraction_of_region": 0.0221
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. CT-ICH native scanner space (CT) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. hemorrhage = CT-ICH manual hemorrhage segmentation (patient 092), native CT space. CT-ICH is not MNI-normalized, so the bleed reaches atlas space via its own CT; CT->T1-template registration is cross-modality and approximate (see NOTE(neuro-review) in build code).",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-rh-inferiortemporal",
+      "role": "secondary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 309,
+        "overlap_fraction_of_region": 0.0214
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. CT-ICH native scanner space (CT) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. hemorrhage = CT-ICH manual hemorrhage segmentation (patient 092), native CT space. CT-ICH is not MNI-normalized, so the bleed reaches atlas space via its own CT; CT->T1-template registration is cross-modality and approximate (see NOTE(neuro-review) in build code).",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-rh-rostralmiddlefrontal",
+      "role": "secondary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 771,
+        "overlap_fraction_of_region": 0.0168
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. CT-ICH native scanner space (CT) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. hemorrhage = CT-ICH manual hemorrhage segmentation (patient 092), native CT space. CT-ICH is not MNI-normalized, so the bleed reaches atlas space via its own CT; CT->T1-template registration is cross-modality and approximate (see NOTE(neuro-review) in build code).",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-rh-fusiform",
+      "role": "secondary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 254,
+        "overlap_fraction_of_region": 0.016
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. CT-ICH native scanner space (CT) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. hemorrhage = CT-ICH manual hemorrhage segmentation (patient 092), native CT space. CT-ICH is not MNI-normalized, so the bleed reaches atlas space via its own CT; CT->T1-template registration is cross-modality and approximate (see NOTE(neuro-review) in build code).",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-rh-middletemporal",
+      "role": "secondary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 325,
+        "overlap_fraction_of_region": 0.0121
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. CT-ICH native scanner space (CT) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. hemorrhage = CT-ICH manual hemorrhage segmentation (patient 092), native CT space. CT-ICH is not MNI-normalized, so the bleed reaches atlas space via its own CT; CT->T1-template registration is cross-modality and approximate (see NOTE(neuro-review) in build code).",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-lh-precuneus",
+      "role": "secondary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 283,
+        "overlap_fraction_of_region": 0.0111
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. CT-ICH native scanner space (CT) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. hemorrhage = CT-ICH manual hemorrhage segmentation (patient 092), native CT space. CT-ICH is not MNI-normalized, so the bleed reaches atlas space via its own CT; CT->T1-template registration is cross-modality and approximate (see NOTE(neuro-review) in build code).",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-rh-precentral",
+      "role": "secondary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 536,
+        "overlap_fraction_of_region": 0.011
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. CT-ICH native scanner space (CT) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. hemorrhage = CT-ICH manual hemorrhage segmentation (patient 092), native CT space. CT-ICH is not MNI-normalized, so the bleed reaches atlas space via its own CT; CT->T1-template registration is cross-modality and approximate (see NOTE(neuro-review) in build code).",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-rh-postcentral",
+      "role": "secondary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 466,
+        "overlap_fraction_of_region": 0.0089
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. CT-ICH native scanner space (CT) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. hemorrhage = CT-ICH manual hemorrhage segmentation (patient 092), native CT space. CT-ICH is not MNI-normalized, so the bleed reaches atlas space via its own CT; CT->T1-template registration is cross-modality and approximate (see NOTE(neuro-review) in build code).",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-rh-superiorfrontal",
+      "role": "secondary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 697,
+        "overlap_fraction_of_region": 0.0074
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. CT-ICH native scanner space (CT) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. hemorrhage = CT-ICH manual hemorrhage segmentation (patient 092), native CT space. CT-ICH is not MNI-normalized, so the bleed reaches atlas space via its own CT; CT->T1-template registration is cross-modality and approximate (see NOTE(neuro-review) in build code).",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-lh-postcentral",
+      "role": "secondary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 382,
+        "overlap_fraction_of_region": 0.0071
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. CT-ICH native scanner space (CT) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. hemorrhage = CT-ICH manual hemorrhage segmentation (patient 092), native CT space. CT-ICH is not MNI-normalized, so the bleed reaches atlas space via its own CT; CT->T1-template registration is cross-modality and approximate (see NOTE(neuro-review) in build code).",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-rh-lateraloccipital",
+      "role": "secondary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 159,
+        "overlap_fraction_of_region": 0.0038
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. CT-ICH native scanner space (CT) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. hemorrhage = CT-ICH manual hemorrhage segmentation (patient 092), native CT space. CT-ICH is not MNI-normalized, so the bleed reaches atlas space via its own CT; CT->T1-template registration is cross-modality and approximate (see NOTE(neuro-review) in build code).",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-rh-parsopercularis",
+      "role": "secondary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 30,
+        "overlap_fraction_of_region": 0.0038
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. CT-ICH native scanner space (CT) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. hemorrhage = CT-ICH manual hemorrhage segmentation (patient 092), native CT space. CT-ICH is not MNI-normalized, so the bleed reaches atlas space via its own CT; CT->T1-template registration is cross-modality and approximate (see NOTE(neuro-review) in build code).",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-lh-precentral",
+      "role": "secondary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 188,
+        "overlap_fraction_of_region": 0.0028
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. CT-ICH native scanner space (CT) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. hemorrhage = CT-ICH manual hemorrhage segmentation (patient 092), native CT space. CT-ICH is not MNI-normalized, so the bleed reaches atlas space via its own CT; CT->T1-template registration is cross-modality and approximate (see NOTE(neuro-review) in build code).",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-rh-insula",
+      "role": "secondary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 19,
+        "overlap_fraction_of_region": 0.0014
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. CT-ICH native scanner space (CT) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. hemorrhage = CT-ICH manual hemorrhage segmentation (patient 092), native CT space. CT-ICH is not MNI-normalized, so the bleed reaches atlas space via its own CT; CT->T1-template registration is cross-modality and approximate (see NOTE(neuro-review) in build code).",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-lh-superiorparietal",
+      "role": "secondary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 73,
+        "overlap_fraction_of_region": 0.001
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. CT-ICH native scanner space (CT) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. hemorrhage = CT-ICH manual hemorrhage segmentation (patient 092), native CT space. CT-ICH is not MNI-normalized, so the bleed reaches atlas space via its own CT; CT->T1-template registration is cross-modality and approximate (see NOTE(neuro-review) in build code).",
+      "notes": ""
+    },
+    {
+      "region_id": "ctx-lh-superiorfrontal",
+      "role": "secondary",
+      "evidence_type": "segmentation_mask",
+      "overlap_metric": {
+        "overlap_voxels": 37,
+        "overlap_fraction_of_region": 0.0004
+      },
+      "provenance": "computed: lesion mask intersect DK+aseg labelmap in MNI152 1mm space. CT-ICH native scanner space (CT) -> MNI152 dipy affine registration (mutual information), mask warped nearest-neighbour. Labelmap voxelized from the atlas meshes (nearest-region assignment within the MNI152 brain mask), so labels are the regions.json ids. role=primary when overlap_fraction_of_region >= 0.10. Registration and voxel parcellation are approximate; pending expert review. hemorrhage = CT-ICH manual hemorrhage segmentation (patient 092), native CT space. CT-ICH is not MNI-normalized, so the bleed reaches atlas space via its own CT; CT->T1-template registration is cross-modality and approximate (see NOTE(neuro-review) in build code).",
+      "notes": ""
+    }
+  ],
+  "review_status": "pending"
+}
